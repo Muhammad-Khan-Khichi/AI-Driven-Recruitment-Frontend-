@@ -1,8 +1,8 @@
-import { RiCloseLine } from 'react-icons/ri'
+import { RiCloseLine, RiLoader4Line, RiFilter3Line } from 'react-icons/ri'
 
 const ROLE_TYPES = ['Engineering', 'Product', 'Design']
 
-export default function JobFilters({ filters, setFilters, trainingProgress }) {
+export default function JobFilters({ filters, setFilters, trainingProgress, onApply, applying, hasResults }) {
   const toggleRoleType = (type) => {
     setFilters(f => {
       const isActive = f.roleTypes.includes(type)
@@ -14,7 +14,22 @@ export default function JobFilters({ filters, setFilters, trainingProgress }) {
     })
   }
 
+  const toggleRemote = () => {
+    setFilters(f => {
+      const next = !f.remoteOnly
+      return {
+        ...f,
+        remoteOnly: next,
+        activeTags: next ? [...new Set([...f.activeTags, 'Remote'])] : f.activeTags.filter(t => t !== 'Remote'),
+      }
+    })
+  }
+
   const removeActiveTag = (tag) => {
+    if (tag === 'Remote') {
+      setFilters(f => ({ ...f, remoteOnly: false, activeTags: f.activeTags.filter(t => t !== tag) }))
+      return
+    }
     setFilters(f => ({
       ...f,
       activeTags: f.activeTags.filter(t => t !== tag),
@@ -44,9 +59,33 @@ export default function JobFilters({ filters, setFilters, trainingProgress }) {
         </div>
       )}
 
+      {/* Remote toggle */}
+      <div>
+        <span className="label-xs block mb-3">Work Type</span>
+        <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={filters.remoteOnly}
+            onChange={toggleRemote}
+            className="sr-only peer"
+          />
+          <span className="
+            w-[18px] h-[18px] rounded-md border border-border2 flex items-center justify-center
+            peer-checked:bg-cyan peer-checked:border-cyan transition-all flex-shrink-0
+          ">
+            {filters.remoteOnly && (
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8l3.5 3.5L13 5" stroke="#07090A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </span>
+          <span className="text-t2 text-sm">Remote only</span>
+        </label>
+      </div>
+
       {/* Salary range */}
       <div>
-        <span className="label-xs block mb-3">Salary Range</span>
+        <span className="label-xs block mb-3">Min Salary</span>
         <input
           type="range"
           min={filters.salaryMin}
@@ -64,7 +103,7 @@ export default function JobFilters({ filters, setFilters, trainingProgress }) {
 
       {/* Role type */}
       <div>
-        <span className="label-xs block mb-3">Role Type</span>
+        <span className="label-xs block mb-3">Experience Level</span>
         <div className="flex flex-col gap-2.5">
           {ROLE_TYPES.map(type => (
             <label key={type} className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -89,6 +128,19 @@ export default function JobFilters({ filters, setFilters, trainingProgress }) {
           ))}
         </div>
       </div>
+
+      {/* Apply — real call to POST /jobs/filter against current results */}
+      <button
+        onClick={onApply}
+        disabled={!hasResults || applying}
+        className="btn-outline justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {applying ? <RiLoader4Line size={15} className="animate-spin" /> : <RiFilter3Line size={15} />}
+        Apply Filters
+      </button>
+      {!hasResults && (
+        <p className="text-t4 text-xs -mt-4">Run a search first to enable filtering.</p>
+      )}
 
       {/* Spacer pushes training progress to the bottom on tall sidebars */}
       <div className="flex-1" />

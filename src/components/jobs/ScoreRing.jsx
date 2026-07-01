@@ -1,4 +1,4 @@
-// import { scoreColor } from '../../pages/utils/scoreColor'
+// import { scoreColor } from '../../utils/statusConfig'
 
 function matchLabel(score) {
   if (score >= 90) return 'Elite Match'
