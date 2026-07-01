@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../pages/context/AuthContext'
 import { useResume } from '../pages/context/ResumeContext'
 import { jobsApi } from './api/jobs'
+import { errMessage, errStatus } from './utils/errors'
 import JobFilters from '../components/jobs/JobFilters'
 import JobCard from '../components/jobs/JobCard'
 
@@ -52,6 +53,7 @@ export default function JobSearch() {
     remoteOnly:    false,
   })
   const [filtering, setFiltering] = useState(false)
+  const [wantCoverLetters, setWantCoverLetters] = useState(false)
 
   // Real elapsed-time tracking — this pipeline genuinely takes 1-6+ minutes
   // (confirmed from backend logs: each keyword combo runs job-board fetches +
@@ -86,11 +88,11 @@ export default function JobSearch() {
     setSearching(true)
     setSearchError('')
     try {
-      const res = await jobsApi.search(location.trim(), false)
+      const res = await jobsApi.search(location.trim(), wantCoverLetters)
       setJobs(res?.top_jobs || res?.jobs || [])
       setSearchMode('general')
     } catch (err) {
-      setSearchError(typeof err === 'string' ? err : 'Search failed. Please try again.')
+      setSearchError(errMessage(err, 'Search failed. Please try again.'))
       setJobs([])
     } finally {
       setSearching(false)
@@ -117,12 +119,12 @@ export default function JobSearch() {
         location: location.trim(),
         maxResultsPerKeyword: 20,
         minMatchScore: 20,
-        generateCoverLetters: false,
+        generateCoverLetters: wantCoverLetters,
       })
       setJobs(res?.top_jobs || res?.jobs || [])
       setSearchMode('resume')
     } catch (err) {
-      setSearchError(typeof err === 'string' ? err : 'Resume search failed. Please try again.')
+      setSearchError(errMessage(err, 'Resume search failed. Please try again.'))
       setJobs([])
     } finally {
       setSearching(false)
@@ -144,7 +146,7 @@ export default function JobSearch() {
       const filtered = Array.isArray(res) ? res : (res?.jobs || [])
       setJobs(filtered)
     } catch (err) {
-      setSearchError(typeof err === 'string' ? err : 'Filtering failed.')
+      setSearchError(errMessage(err, 'Filtering failed.'))
     } finally {
       setFiltering(false)
     }
@@ -163,7 +165,7 @@ export default function JobSearch() {
       setTrackedMsg(`Tracked: ${job.title}`)
       setTimeout(() => setTrackedMsg(''), 2500)
     } catch (err) {
-      setSearchError(typeof err === 'string' ? err : 'Could not track application.')
+      setSearchError(errMessage(err, 'Could not track application.'))
     } finally {
       setTrackingIdx(null)
     }
@@ -182,7 +184,15 @@ export default function JobSearch() {
         setJobs(prev => prev.map((j, i) => i === idx ? { ...j, cover_letter: res.content } : j))
       }
     } catch (err) {
-      setSearchError(typeof err === 'string' ? err : 'Could not generate cover letter.')
+      // A 404 here means the backend has no dedicated per-job cover-letter
+      // route — this is a known gap, not a transient failure, so the message
+      // points the user at the working alternative instead of "try again".
+      const is404 = errStatus(err) === 404
+      setSearchError(
+        is404
+          ? 'Per-job cover letter generation isn\u2019t available on this server yet. Re-run your search with "Generate cover letters" checked instead — it\u2019s built into the search itself.'
+          : errMessage(err, 'Could not generate cover letter.')
+      )
     } finally {
       setLetterIdx(null)
     }
@@ -341,6 +351,30 @@ export default function JobSearch() {
               <p className="text-t4 text-xs mt-2">Upload a resume to unlock this mode.</p>
             )}
           </div>
+
+          {/* Shared option — generating cover letters happens inline during
+              search on the backend, so this must be set before the search runs.
+              There is no working per-job cover-letter endpoint to fall back on. */}
+          <label className="flex items-center gap-2.5 cursor-pointer select-none px-1">
+            <input
+              type="checkbox"
+              checked={wantCoverLetters}
+              onChange={e => setWantCoverLetters(e.target.checked)}
+              className="sr-only peer"
+            />
+            <span className="
+              w-[18px] h-[18px] rounded-md border border-border2 flex items-center justify-center
+              peer-checked:bg-em peer-checked:border-em transition-all flex-shrink-0
+            ">
+              {wantCoverLetters && (
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8l3.5 3.5L13 5" stroke="#07090A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </span>
+            <span className="text-t2 text-sm">Generate cover letters</span>
+            <span className="text-t4 text-xs">— adds time to the search, generated per result</span>
+          </label>
 
           {/* Results count + sort */}
           {jobs !== null && (

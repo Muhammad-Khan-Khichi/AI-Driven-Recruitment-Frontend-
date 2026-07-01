@@ -3,6 +3,10 @@ import AuthPage from './pages/auth/AuthPage'
 import Dashboard from './pages/Dashboard'
 import Resume from './pages/Resume'
 import JobSearch from './pages/JobSearch'
+import Applications from './pages/Applications'
+import History from './pages/History'
+import Semantic from './pages/Semantic'
+import Optimizer from './pages/Optimizer'
 import Layout from './components/layout/Layout'
 import { ProtectedRoute, AdminRoute } from './components/layout/ProtectedRoute'
 import Placeholder from './components/ui/Placeholder'
@@ -25,12 +29,12 @@ export default function AppRouter() {
         <Route index               element={<Dashboard />} />
         <Route path="resume"       element={<Resume />} />
         <Route path="job-search"   element={<JobSearch />} />
-        <Route path="semantic"     element={<Placeholder title="Semantic Search" icon="🔎" />} />
-        <Route path="optimizer"    element={<Placeholder title="Resume Optimizer" icon="📝" />} />
+        <Route path="semantic"     element={<Semantic />} />
+        <Route path="optimizer"    element={<Optimizer />} />
         <Route path="linkedin"     element={<Placeholder title="LinkedIn Optimizer" icon="💼" />} />
         <Route path="interview"    element={<Placeholder title="Interview Prep" icon="🎤" />} />
-        <Route path="applications" element={<Placeholder title="Applications"  icon="📊" />} />
-        <Route path="history"      element={<Placeholder title="Search History" icon="📜" />} />
+        <Route path="applications" element={<Applications />} />
+        <Route path="history"      element={<History />} />
 
         {/* Admin only */}
         <Route

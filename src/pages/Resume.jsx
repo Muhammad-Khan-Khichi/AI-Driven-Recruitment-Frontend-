@@ -5,6 +5,7 @@ import {
   RiArrowRightLine, RiAddLine,
 } from 'react-icons/ri'
 import { jobsApi } from './api/jobs'
+import { errMessage } from './utils/errors'
 import { useResume } from '../pages/context/ResumeContext'
 import UploadZone from '../components/resume/UploadZone'
 import SkillChip from '../components/resume/SkillChip'
@@ -29,7 +30,7 @@ export default function Resume() {
       setResumeData({ ...data, filename: file.name })
       setExtraSkills([])
     } catch (err) {
-      setError(typeof err === 'string' ? err : 'Could not parse resume. Please try again.')
+      setError(errMessage(err, 'Could not parse resume. Please try again.'))
     } finally {
       setUploading(false)
     }

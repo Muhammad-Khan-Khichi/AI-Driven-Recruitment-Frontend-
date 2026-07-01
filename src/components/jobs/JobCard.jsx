@@ -75,6 +75,7 @@ export default function JobCard({ job, onTrack, onGenerateCoverLetter, onIntervi
           <button
             onClick={() => onGenerateCoverLetter(job)}
             disabled={generatingLetter}
+            title="Tries a dedicated cover-letter endpoint — if your backend doesn't have one, use the 'Generate cover letters' option before searching instead"
             className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-em text-bg font-semibold text-xs rounded-lg px-3 py-2.5 hover:brightness-110 transition-all disabled:opacity-60"
           >
             {generatingLetter

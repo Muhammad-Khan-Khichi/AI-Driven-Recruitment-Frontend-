@@ -6,6 +6,7 @@ import {
   RiUserLine, RiMapPinLine,
 } from 'react-icons/ri'
 import { useAuth } from '../../pages/context/AuthContext'
+import { errMessage } from '../utils/errors'
 import ThemeToggle from '../../components/ui/ThemeToggle'
 
 // ── Reusable field component ──────────────────────────────────
@@ -116,7 +117,7 @@ function SignInForm() {
       await login(email, password)
       navigate('/')
     } catch (err) {
-      setApiError(typeof err === 'string' ? err : 'Invalid credentials. Please try again.')
+      setApiError(errMessage(err, 'Invalid credentials. Please try again.'))
     } finally {
       setLoading(false)
     }
@@ -209,7 +210,7 @@ function SignUpForm() {
       await signup(form)
       navigate('/')
     } catch (err) {
-      setApiError(typeof err === 'string' ? err : 'Could not create account. Please try again.')
+      setApiError(errMessage(err, 'Could not create account. Please try again.'))
     } finally {
       setLoading(false)
     }

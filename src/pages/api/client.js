@@ -27,9 +27,16 @@ function handleError(err) {
     window.location.href = '/auth'
   }
   if (err.code === 'ECONNABORTED') {
-    return Promise.reject('The AI search is taking longer than expected. It may still be running on the server — try checking History in a moment.')
+    const timeoutErr = new Error('The AI search is taking longer than expected. It may still be running on the server — try checking History in a moment.')
+    timeoutErr.status = null
+    return Promise.reject(timeoutErr)
   }
-  return Promise.reject(err.response?.data?.detail || err.message || 'Request failed')
+  const message = err.response?.data?.detail || err.message || 'Request failed'
+  // Reject with a real Error carrying .status, but keep it stringifiable so
+  // existing `typeof err === 'string'` checks elsewhere still degrade gracefully.
+  const apiErr = new Error(typeof message === 'string' ? message : JSON.stringify(message))
+  apiErr.status = err.response?.status ?? null
+  return Promise.reject(apiErr)
 }
 
 client.interceptors.request.use(attachAuth)
