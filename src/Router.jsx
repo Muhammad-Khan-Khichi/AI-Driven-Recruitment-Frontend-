@@ -9,6 +9,7 @@ import Semantic from './pages/Semantic'
 import Optimizer from './pages/Optimizer'
 import Interview from './pages/Interview'
 import LinkedIn from './pages/LinkedIn'
+import CoverLetter from './pages/CoverLetter'
 import Layout from './components/layout/Layout'
 import { ProtectedRoute, AdminRoute } from './components/layout/ProtectedRoute'
 import Placeholder from './components/ui/Placeholder'
@@ -35,8 +36,9 @@ export default function AppRouter() {
         <Route path="optimizer"    element={<Optimizer />} />
         <Route path="linkedin"     element={<LinkedIn />} />
         <Route path="interview"    element={<Interview />} />
-        <Route path="applications" element={<Applications />} />
-        <Route path="history"      element={<History />} />
+        <Route path="applications"  element={<Applications />} />
+        <Route path="history"       element={<History />} />
+        <Route path="cover-letter"  element={<CoverLetter />} />
 
         {/* Admin only */}
         <Route
