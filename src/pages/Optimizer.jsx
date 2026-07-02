@@ -5,7 +5,7 @@ import {
   RiSparklingLine,
 } from 'react-icons/ri'
 import { resumeApi } from './api/resume'
-import { useResume } from '../pages/context/ResumeContext'
+import { useResume } from './context/ResumeContext'
 import { errMessage } from './utils/errors'
 
 // ── Score ring ────────────────────────────────────────────────
