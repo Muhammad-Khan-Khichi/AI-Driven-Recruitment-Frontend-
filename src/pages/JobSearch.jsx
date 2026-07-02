@@ -7,7 +7,8 @@ import {
 import { useAuth } from './context/AuthContext'
 import { useResume } from './context/ResumeContext'
 import { jobsApi } from './api/jobs'
-import { errMessage, errStatus } from './utils/errors'
+import { coverLetterApi } from './api/coverLetter'
+import { errMessage } from './utils/errors'
 import JobFilters from '../components/jobs/JobFilters'
 import JobCard from '../components/jobs/JobCard'
 
@@ -43,6 +44,7 @@ export default function JobSearch() {
   const [trackingIdx, setTrackingIdx] = useState(null)
   const [letterIdx, setLetterIdx]     = useState(null)
   const [trackedMsg, setTrackedMsg]   = useState('')
+  const [letterMsg, setLetterMsg]     = useState('')
 
   const [filters, setFilters] = useState({
     activeTags:    [],
@@ -173,26 +175,26 @@ export default function JobSearch() {
 
   const handleGenerateCoverLetter = async (job, idx) => {
     setLetterIdx(idx)
+    setSearchError('')
     try {
-      const res = await jobsApi.generateCoverLetter({
+      const res = await coverLetterApi.generate({
+        resume_id: resumeId ? Number(resumeId) : undefined,
         job_title: job.title,
         company: job.company,
         job_description: job.description || '',
-        user_name: user?.full_name || user?.username || 'Candidate',
+        job_url: job.url || '',
+        location: job.location || '',
+        tone: 'professional',
       })
-      if (res?.content) {
-        setJobs(prev => prev.map((j, i) => i === idx ? { ...j, cover_letter: res.content } : j))
+      // Use the professional variant body inline on the card
+      const professionalVariant = res?.variants?.find(v => v.tone === 'professional') || res?.variants?.[0]
+      if (professionalVariant?.body) {
+        setJobs(prev => prev.map((j, i) => i === idx ? { ...j, cover_letter: professionalVariant.body, cover_letter_id: res.id } : j))
       }
+      setLetterMsg(`Generated for ${job.company} — view all 3 variants in Cover Letters`)
+      setTimeout(() => setLetterMsg(''), 5000)
     } catch (err) {
-      // A 404 here means the backend has no dedicated per-job cover-letter
-      // route — this is a known gap, not a transient failure, so the message
-      // points the user at the working alternative instead of "try again".
-      const is404 = errStatus(err) === 404
-      setSearchError(
-        is404
-          ? 'Per-job cover letter generation isn\u2019t available on this server yet. Re-run your search with "Generate cover letters" checked instead — it\u2019s built into the search itself.'
-          : errMessage(err, 'Could not generate cover letter.')
-      )
+      setSearchError(errMessage(err, 'Could not generate cover letter.'))
     } finally {
       setLetterIdx(null)
     }
@@ -275,6 +277,18 @@ export default function JobSearch() {
       {trackedMsg && (
         <div className="bg-[#052E1C] border border-em text-em text-sm rounded-xl px-5 py-3 mb-6">
           ✅ {trackedMsg}
+        </div>
+      )}
+
+      {letterMsg && (
+        <div className="bg-[#052E1C] border border-em text-em text-sm rounded-xl px-5 py-3 mb-6 flex items-center justify-between gap-4">
+          <span>✉️ {letterMsg}</span>
+          <button
+            onClick={() => navigate('/cover-letter')}
+            className="text-em font-bold text-xs border border-em rounded-lg px-3 py-1.5 hover:bg-em hover:text-bg transition-all flex-shrink-0"
+          >
+            View all variants →
+          </button>
         </div>
       )}
 
