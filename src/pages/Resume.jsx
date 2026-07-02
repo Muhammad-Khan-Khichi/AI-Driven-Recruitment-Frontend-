@@ -6,7 +6,7 @@ import {
 } from 'react-icons/ri'
 import { jobsApi } from './api/jobs'
 import { errMessage } from './utils/errors'
-import { useResume } from '../pages/context/ResumeContext'
+import { useResume } from './context/ResumeContext'
 import UploadZone from '../components/resume/UploadZone'
 import SkillChip from '../components/resume/SkillChip'
 
