@@ -4,8 +4,8 @@ import {
   RiSearch2Line, RiFlashlightLine, RiAlertLine,
   RiArrowDownSLine, RiLoader4Line, RiUserStarLine, RiMapPin2Line,
 } from 'react-icons/ri'
-import { useAuth } from '../pages/context/AuthContext'
-import { useResume } from '../pages/context/ResumeContext'
+import { useAuth } from './context/AuthContext'
+import { useResume } from './context/ResumeContext'
 import { jobsApi } from './api/jobs'
 import { errMessage, errStatus } from './utils/errors'
 import JobFilters from '../components/jobs/JobFilters'
