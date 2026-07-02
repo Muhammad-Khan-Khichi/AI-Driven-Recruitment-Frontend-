@@ -4,8 +4,8 @@ import {
   RiMagicLine, RiLineChartLine, RiMicLine, RiQuestionLine,
   RiNodeTree, RiContactsBookLine, RiSpeedUpLine, RiNotification3Line,
 } from 'react-icons/ri'
-import { useAuth } from '../pages/context/AuthContext'
-import { useResume } from '../pages/context/ResumeContext'
+import { useAuth } from './context/AuthContext'
+import { useResume } from './context/ResumeContext'
 import { jobsApi } from './api/jobs'
 import FeatureCard from '../components/ui/FeatureCard'
 
