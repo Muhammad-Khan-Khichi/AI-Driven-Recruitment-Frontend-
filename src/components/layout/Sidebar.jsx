@@ -3,22 +3,23 @@ import { Link } from 'react-router-dom'
 import {
   RiDashboardLine, RiFileTextLine, RiSearchLine, RiSparklingLine,
   RiMagicLine, RiBriefcaseLine, RiMicLine, RiClipboardLine,
-  RiHistoryLine, RiLineChartLine, RiCloudLine,
+  RiHistoryLine, RiLineChartLine, RiCloudLine, RiMailLine,
   RiLogoutBoxRLine, RiMenuLine, RiCloseLine, RiVipCrownLine,
 } from 'react-icons/ri'
 import { useAuth } from '../../pages/context/AuthContext'
 import NavItem from './NavItem'
 
 const NAV_ITEMS = [
-  { to: '/',            icon: RiDashboardLine, label: 'Dashboard',   end: true },
-  { to: '/resume',       icon: RiFileTextLine,  label: 'Resume' },
-  { to: '/job-search',   icon: RiSearchLine,    label: 'Job Search' },
-  { to: '/semantic',     icon: RiSparklingLine, label: 'Semantic' },
-  { to: '/optimizer',    icon: RiMagicLine,     label: 'Optimizer' },
-  { to: '/linkedin',     icon: RiBriefcaseLine, label: 'LinkedIn' },
-  { to: '/interview',    icon: RiMicLine,       label: 'Interview' },
-  { to: '/applications', icon: RiClipboardLine, label: 'Applications' },
-  { to: '/history',      icon: RiHistoryLine,   label: 'History' },
+  { to: '/',              icon: RiDashboardLine, label: 'Dashboard',     end: true },
+  { to: '/resume',        icon: RiFileTextLine,  label: 'Resume' },
+  { to: '/job-search',    icon: RiSearchLine,    label: 'Job Search' },
+  { to: '/semantic',      icon: RiSparklingLine, label: 'Semantic' },
+  { to: '/optimizer',     icon: RiMagicLine,     label: 'Optimizer' },
+  { to: '/linkedin',      icon: RiBriefcaseLine, label: 'LinkedIn' },
+  { to: '/interview',     icon: RiMicLine,       label: 'Interview' },
+  { to: '/cover-letter',  icon: RiMailLine,      label: 'Cover Letters' },
+  { to: '/applications',  icon: RiClipboardLine, label: 'Applications' },
+  { to: '/history',       icon: RiHistoryLine,   label: 'History' },
 ]
 
 function useApiHealth() {
