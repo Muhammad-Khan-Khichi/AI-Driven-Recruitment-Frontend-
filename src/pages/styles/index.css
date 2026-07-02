@@ -126,6 +126,216 @@
   .pill-offer     { @apply bg-[#052E1C] text-em border border-[#074D2F]; }
   .pill-rejected  { @apply bg-[#2D0A0A] text-red border border-[#3D1212]; }
   .pill-admin     { @apply bg-surface3 text-t2 border border-border2; }
+
+  /* ── NEW: Cold Email components ─────────── */
+
+  /* Gradient button for primary CTAs (Generate) */
+  .btn-gradient {
+    @apply w-full font-bold rounded-lg px-4 py-3 text-sm text-t1
+           flex items-center justify-center gap-2
+           transition-all duration-150 active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background: linear-gradient(135deg, var(--color-em), var(--color-cyan));
+    box-shadow: var(--shadow-lg-em);
+  }
+  .btn-gradient:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+
+  /* Outline button with accent color */
+  .btn-outline-em {
+    @apply border border-em text-em bg-transparent font-semibold rounded-lg
+           px-4 py-2 text-sm
+           flex items-center justify-center gap-2
+           transition-all duration-150
+           hover:bg-em hover:text-bg active:scale-[0.98];
+  }
+
+  .btn-outline-cyan {
+    @apply border border-cyan text-cyan bg-transparent font-semibold rounded-lg
+           px-4 py-2 text-sm
+           flex items-center justify-center gap-2
+           transition-all duration-150
+           hover:bg-cyan hover:text-bg active:scale-[0.98];
+  }
+
+  .btn-outline-red {
+    @apply border border-red text-red bg-transparent font-semibold rounded-lg
+           px-4 py-2 text-sm
+           flex items-center justify-center gap-2
+           transition-all duration-150
+           hover:bg-red hover:text-t1 active:scale-[0.98];
+  }
+
+  /* Tone badges */
+  .tone-professional {
+    @apply bg-[#0C2233] text-cyan border border-[#0E3347] rounded-full px-3 py-1
+           text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1;
+  }
+
+  .tone-casual {
+    @apply bg-[#052E1C] text-em border border-[#074D2F] rounded-full px-3 py-1
+           text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1;
+  }
+
+  .tone-bold {
+    @apply bg-[#2D1A00] text-amber border border-[#3D2400] rounded-full px-3 py-1
+           text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1;
+  }
+
+  /* Variant circle (gradient A/B/C) */
+  .variant-circle {
+    @apply w-9 h-9 rounded-full flex items-center justify-center
+           text-t1 font-bold text-base flex-shrink-0;
+    background: linear-gradient(135deg, var(--color-em), var(--color-cyan));
+  }
+
+  .variant-circle-b {
+    background: linear-gradient(135deg, var(--color-em), var(--color-cyan));
+  }
+
+  .variant-circle-c {
+    background: linear-gradient(135deg, var(--color-amber), var(--color-red));
+  }
+
+  /* Email variant card */
+  .email-card {
+    @apply bg-surface border border-border rounded-xl p-6
+           transition-all duration-200;
+  }
+  .email-card:hover {
+    @apply border-border2;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg-em);
+  }
+
+  /* Contact card */
+  .contact-card {
+    @apply bg-surface border border-border rounded-xl p-6
+           transition-all duration-200;
+  }
+  .contact-card:hover {
+    @apply bg-surface2 border-border2;
+  }
+
+  /* Contact avatar */
+  .contact-avatar {
+    @apply w-12 h-12 rounded-full flex items-center justify-center
+           text-t1 font-bold text-base flex-shrink-0;
+    background: linear-gradient(135deg, var(--color-em), var(--color-cyan));
+  }
+
+  /* Recommendation card (with left accent border) */
+  .recommendation-card {
+    @apply bg-surface2 border border-border rounded-lg p-4;
+    border-left: 4px solid var(--color-em);
+  }
+
+  .tip-card {
+    @apply bg-surface2 border border-border rounded-lg p-4;
+    border-left: 4px solid var(--color-cyan);
+  }
+
+  /* Status pill — for campaign status */
+  .pill-sent {
+    @apply bg-[#0C2233] text-cyan border border-[#0E3347] rounded-full
+           px-3 py-1 text-xs font-semibold uppercase tracking-wider
+           inline-flex items-center gap-1;
+  }
+
+  .pill-opened {
+    @apply bg-[#2D1A00] text-amber border border-[#3D2400] rounded-full
+           px-3 py-1 text-xs font-semibold uppercase tracking-wider
+           inline-flex items-center gap-1;
+  }
+
+  .pill-bounced {
+    @apply bg-[#2D0A0A] text-red border border-[#3D1212] rounded-full
+           px-3 py-1 text-xs font-semibold uppercase tracking-wider
+           inline-flex items-center gap-1;
+  }
+
+  /* Metric chip */
+  .metric-chip {
+    @apply bg-surface border border-border rounded-lg p-4;
+  }
+
+  .metric-value {
+    @apply text-2xl font-extrabold font-mono;
+  }
+
+  .metric-label {
+    @apply text-[10px] font-semibold tracking-widest uppercase text-t3 mt-1;
+  }
+
+  /* Hero metric (large) */
+  .metric-hero {
+    @apply text-4xl font-extrabold font-mono leading-tight;
+  }
+
+  /* Loading skeleton */
+  .skeleton {
+    @apply bg-surface2 rounded-lg;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  /* Empty state container */
+  .empty-state {
+    @apply bg-surface border border-dashed border-border rounded-xl
+           p-16 text-center;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background: rgba(7, 9, 10, 0.85);
+    backdrop-filter: blur(8px);
+  }
+
+  .modal-card {
+    @apply relative bg-surface border border-border rounded-2xl
+           shadow-[var(--shadow-lg-em)] w-full max-w-2xl
+           max-h-[90vh] overflow-y-auto;
+  }
+
+  /* Tag chip (small) */
+  .tag-chip {
+    @apply bg-surface2 text-t2 border border-border rounded-full
+           px-2 py-0.5 text-xs;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply inline-block w-4 h-4 border-2 border-transparent
+           border-t-t1 rounded-full;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* Pipeline progress bar */
+  .progress-track {
+    @apply h-2 bg-surface2 rounded-full overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-500;
+  }
+
+  /* Gradient divider (for AI cards) */
+  .gradient-divider {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-em),
+      var(--color-cyan),
+      transparent
+    );
+  }
 }
 
 @layer utilities {
