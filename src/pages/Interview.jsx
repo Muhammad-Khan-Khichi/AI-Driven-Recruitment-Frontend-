@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
-  RiMicLine, RiPlayCircleLine, RiLoader4Line,
+  RiMicLine, RiLoader4Line,
   RiArrowDownSLine, RiCheckboxCircleLine, RiBookOpenLine,
-  RiUser3Line,
+  RiUser3Line, RiTerminalLine, RiTeamLine,
+  RiLightbulbLine, RiChatQuoteLine,
+  RiArrowRightLine, RiCheckLine,
+  RiSparklingLine, RiFileTextLine,
+  RiFileCopyLine,
 } from 'react-icons/ri'
 import { interviewApi } from './api/interview'
 import { errMessage } from './utils/errors'
@@ -28,42 +32,15 @@ function TabBar({ active, onChange }) {
   )
 }
 
-// ── Shared: Readiness ring ────────────────────────────────────
-function ReadinessRing({ score }) {
-  const s    = Math.round(score ?? 0)
-  const r    = 52
-  const circ = 2 * Math.PI * r
-  const off  = circ - (s / 100) * circ
-  const color = s >= 75 ? '#10B981' : s >= 50 ? '#F59E0B' : '#EF4444'
-
-  return (
-    <div className="relative w-36 h-36 mx-auto">
-      <svg viewBox="0 0 128 128" className="w-full h-full -rotate-90">
-        <circle cx="64" cy="64" r={r} fill="none" stroke="#1A2B20" strokeWidth="8" />
-        <circle
-          cx="64" cy="64" r={r} fill="none"
-          stroke={color} strokeWidth="8" strokeLinecap="round"
-          strokeDasharray={circ} strokeDashoffset={off}
-          style={{ transition: 'stroke-dashoffset 0.7s ease' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-extrabold text-3xl text-t1">{s}%</span>
-        <span className="text-t4 text-[11px] uppercase tracking-wide">Ready to hire</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Question type chip ────────────────────────────────────────
+// ── Question type chips ───────────────────────────────────────
 const Q_TYPES = [
-  { key: 'Technical',   icon: '🖥', color: 'border-em text-em bg-[#052E1C]' },
-  { key: 'Behavioral',  icon: '👥', color: 'border-em text-em bg-[#052E1C]' },
-  { key: 'Situational', icon: '🎯', color: 'border-amber text-amber bg-[#2D1A00]' },
-  { key: 'Culture fit', icon: '🤝', color: 'border-cyan text-cyan bg-[#0C2233]' },
+  { key: 'Technical',   Icon: RiTerminalLine,  color: 'border-em text-em bg-[#052E1C]' },
+  { key: 'Behavioral',  Icon: RiTeamLine,      color: 'border-em text-em bg-[#052E1C]' },
+  { key: 'Situational', Icon: RiLightbulbLine, color: 'border-amber text-amber bg-[#2D1A00]' },
+  { key: 'Culture fit', Icon: RiUser3Line,     color: 'border-cyan text-cyan bg-[#0C2233]' },
 ]
 
-function TypeChip({ label, icon, active, color, onClick }) {
+function TypeChip({ label, Icon, active, color, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -73,39 +50,289 @@ function TypeChip({ label, icon, active, color, onClick }) {
         ${active ? color : 'border-border text-t3 bg-surface2 hover:border-border2 hover:text-t2'}
       `}
     >
-      <span>{icon}</span> {label}
+      <Icon size={14} /> {label}
     </button>
   )
 }
 
-// ── Custom select ─────────────────────────────────────────────
-function Select({ label, value, onChange, options }) {
+// ── Custom dropdown ───────────────────────────────────────────
+function CustomDropdown({ label, value, onChange, options }) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    const handle = (e) => {
+      if (!e.target.closest(`[data-dropdown="${label}"]`)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open, label])
+
+  const displayValue = value.charAt(0).toUpperCase() + value.slice(1)
+
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5" data-dropdown={label}>
       <label className="label-xs">{label}</label>
       <div className="relative">
-        <select
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          className="input-base appearance-none pr-10 cursor-pointer"
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="input-base flex items-center justify-between w-full text-left cursor-pointer hover:border-border2 transition-colors"
         >
-          {options.map(o => (
-            <option key={o} value={o} className="bg-surface text-t1">{o}</option>
-          ))}
-        </select>
-        <RiArrowDownSLine size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-t3 pointer-events-none" />
+          <span className="text-t1">{displayValue}</span>
+          <RiArrowDownSLine
+            size={16}
+            className={`text-t3 transition-transform duration-200 ${open ? 'rotate-180 text-em' : ''}`}
+          />
+        </button>
+
+        {open && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-surface border border-border rounded-xl shadow-lg overflow-hidden animate-in">
+            {options.map(o => {
+              const optLabel = o.charAt(0).toUpperCase() + o.slice(1)
+              const isActive = o === value
+              return (
+                <button
+                  key={o}
+                  type="button"
+                  onClick={() => { onChange(o); setOpen(false) }}
+                  className={`
+                    w-full flex items-center justify-between px-4 py-2.5 text-sm text-left
+                    transition-colors duration-100
+                    ${isActive
+                      ? 'bg-em/10 text-em font-semibold'
+                      : 'text-t2 hover:bg-surface2 hover:text-t1'}
+                  `}
+                >
+                  <span>{optLabel}</span>
+                  {isActive && <RiCheckLine size={15} className="text-em flex-shrink-0" />}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
+// ── Robust parsers ────────────────────────────────────────────
+function parseAIResponse(res) {
+  let data = res
+  if (typeof res === 'string') {
+    let cleaned = res.trim()
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+    try {
+      data = JSON.parse(cleaned)
+    } catch {
+      return {}
+    }
+  }
+  if (!data || typeof data !== 'object') return {}
+  return data
+}
+
+// 🔑 NEW: Unwrap envelope wrappers like { data: {...} }
+function unwrapEnvelope(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return data
+  const envelopeKeys = ['data', 'result', 'response', 'payload', 'body', 'output']
+  for (const k of envelopeKeys) {
+    if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) {
+      console.log(`[unwrap] Unwrapping envelope key: "${k}"`)
+      return { ...data, ...data[k] }
+    }
+  }
+  return data
+}
+
+function extractQuestions(res) {
+  let data = parseAIResponse(res)
+  data = unwrapEnvelope(data)
+
+  const candidates = [
+    data?.questions,
+    data?.items,
+    data?.data,
+    data?.results,
+    data?.question_list,
+    data?.generated_questions,
+  ]
+  if (Array.isArray(data)) candidates.push(data)
+  for (const c of candidates) {
+    if (Array.isArray(c) && c.length > 0) return c
+  }
+  return []
+}
+
+function extractPlan(res) {
+  let data = parseAIResponse(res)
+  data = unwrapEnvelope(data)
+
+  let plan = null
+  if (Array.isArray(data)) plan = data
+  else plan = data?.plan || data?.weeks || data?.days || data?.items || data?.data || []
+  if (Array.isArray(plan) && plan.length > 0) {
+    plan = plan.map(item => {
+      if (item.week && typeof item.week === 'object') return item.week
+      if (item.day_obj && typeof item.day_obj === 'object') return item.day_obj
+      return item
+    })
+  }
+  const resources = data?.resources || data?.links || data?.recommended_resources || []
+  return { plan: Array.isArray(plan) ? plan : [], resources }
+}
+
+// ─────────────────────────────────────────────────────────────
+// ✅ FIX: Bulletproof extractor — finds the answer no matter
+// what shape or field name the backend uses
+// ─────────────────────────────────────────────────────────────
+function extractEvaluation(res) {
+  let data = parseAIResponse(res)
+  if (!data || typeof data !== 'object') data = {}
+  data = unwrapEnvelope(data)
+
+  let improved = ''
+
+  // 1) Direct known fields (extended list)
+  const directCandidates = [
+    'improved_answer', 'improvedAnswer',
+    'better_answer', 'betterAnswer',
+    'sample_answer', 'sampleAnswer',
+    'suggested_answer', 'suggestedAnswer',
+    'rewritten_answer', 'rewrittenAnswer',
+    'enhanced_answer', 'enhancedAnswer',
+    'model_answer', 'modelAnswer',
+    'ideal_answer', 'idealAnswer',
+    'example', 'example_answer', 'exampleAnswer',
+    'recommended_answer', 'recommendedAnswer',
+    'corrected_answer', 'correctedAnswer',
+    'optimal_answer', 'optimalAnswer',
+    'best_answer', 'bestAnswer',
+    'improved', 'better', 'rewritten', 'enhanced',
+    'answer_improved', 'answerImproved',
+    'better_version', 'betterVersion',
+    'sample', 'example_response', 'exampleResponse',
+    'answer', 'ai_answer', 'aiAnswer',
+    'model_response', 'modelResponse',
+    'suggested', 'proposed_answer', 'final_answer', 'new_answer',
+  ]
+  for (const key of directCandidates) {
+    const val = data?.[key]
+    if (typeof val === 'string' && val.trim().length > 5) {
+      improved = val
+      console.log(`[extractEvaluation] Found in direct field: "${key}"`)
+      break
+    }
+  }
+
+  // 2) Name-pattern match — any field containing "answer"/"response"
+  if (!improved) {
+    console.log('[extractEvaluation] Trying name-pattern match…')
+    const nameCandidates = []
+    for (const [key, val] of Object.entries(data)) {
+      const lk = key.toLowerCase()
+      if (typeof val === 'string' && val.trim().length > 10 &&
+          (lk.includes('answer') || lk.includes('response') ||
+           lk.includes('rephras') || lk.includes('improv'))) {
+        nameCandidates.push({ key, val, length: val.length })
+      }
+    }
+    nameCandidates.sort((a, b) => b.length - a.length)
+    if (nameCandidates.length > 0) {
+      improved = nameCandidates[0].val
+      console.log(`[extractEvaluation] Found via name match: "${nameCandidates[0].key}"`)
+    }
+  }
+
+  // 3) Longest-string fallback (with skip-list)
+  if (!improved) {
+    console.log('[extractEvaluation] Trying longest-string fallback…')
+    const allStrings = []
+    const skipKeys = ['feedback', 'comment', 'analysis', 'review', 'notes',
+                      'verdict', 'overall', 'rating', 'summary']
+    for (const [key, val] of Object.entries(data)) {
+      if (typeof val !== 'string') continue
+      const lk = key.toLowerCase()
+      if (skipKeys.some(s => lk.includes(s))) continue
+      if (val.trim().length > 20) {
+        allStrings.push({ key, val, length: val.length })
+      }
+    }
+    allStrings.sort((a, b) => b.length - a.length)
+    if (allStrings.length > 0) {
+      improved = allStrings[0].val
+      console.log(`[extractEvaluation] Found via longest: "${allStrings[0].key}"`)
+    }
+  }
+
+  // 4) Check nested objects one level deeper
+  if (!improved) {
+    for (const [key, val] of Object.entries(data)) {
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        for (const innerKey of Object.keys(val)) {
+          const innerVal = val[innerKey]
+          const lik = innerKey.toLowerCase()
+          if (typeof innerVal === 'string' && innerVal.trim().length > 10 &&
+              (lik.includes('answer') || lik.includes('response') || lik.includes('improv'))) {
+            improved = innerVal
+            console.log(`[extractEvaluation] Found nested: "${key}.${innerKey}"`)
+            break
+          }
+        }
+        if (improved) break
+      }
+    }
+  }
+
+  // 5) Warn if nothing found
+  if (!improved && Object.keys(data).length > 0) {
+    console.warn('[extractEvaluation] No improved answer field found. Keys:', Object.keys(data))
+  }
+
+  return {
+    score:        data?.score ?? data?.rating ?? null,
+    verdict:      data?.verdict ?? data?.overall ?? data?.rating_label ?? '',
+    feedback:     data?.feedback ?? data?.comment ?? data?.analysis ?? data?.review ?? data?.notes ?? '',
+    strengths:    Array.isArray(data?.strengths) ? data.strengths
+                 : (Array.isArray(data?.pros) ? data.pros : []),
+    improvements: Array.isArray(data?.improvements) ? data.improvements
+                 : (Array.isArray(data?.suggestions) ? data.suggestions
+                 : (Array.isArray(data?.areas_to_improve) ? data.areas_to_improve : [])),
+    improved,
+  }
+}
+
 // ── Question card ─────────────────────────────────────────────
 function QuestionCard({ n, question }) {
-  const text = typeof question === 'string' ? question : question.question ?? ''
-  const tags = (typeof question === 'object' && (question.tags || question.type))
-    ? [...(question.tags || []), ...(question.type && !question.tags ? [question.type] : [])]
-    : []
-  const tip = typeof question === 'object' ? question.tip : null
+  const text = (
+    question?.question ??
+    question?.text ??
+    question?.prompt ??
+    question?.content ??
+    question?.title ??
+    (typeof question === 'string' ? question : '')
+  )
+
+  const type = question?.type || question?.category || null
+  const difficulty = question?.difficulty || question?.level || null
+  const tips = question?.tips || question?.tip || question?.advice || null
+
+  // ✅ Extended sample-answer detection
+  const sampleAnswer =
+    question?.sample_answer ??
+    question?.example_answer ??
+    question?.sample ??
+    question?.answer ??
+    question?.model_answer ??
+    question?.suggested_answer ??
+    question?.ideal_answer ??
+    question?.better_answer ??
+    (typeof question?.sample === 'object'
+      ? (question.sample?.text ?? question.sample?.answer ?? question.sample?.content)
+      : null) ??
+    null
 
   return (
     <div className="card px-5 py-4 flex flex-col gap-3">
@@ -114,33 +341,107 @@ function QuestionCard({ n, question }) {
           Q{n}
         </span>
         <div className="flex flex-col gap-2 flex-1 min-w-0">
-          <p className="text-t1 text-sm leading-relaxed">{text}</p>
-          {tags.length > 0 && (
+          <p className="text-t1 text-sm leading-relaxed whitespace-pre-wrap break-words">
+            {text || '(no question text)'}
+          </p>
+          {(type || difficulty) && (
             <div className="flex flex-wrap gap-1.5">
-              {tags.map((tag, i) => (
-                <span key={i} className="bg-surface2 border border-border text-t3 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md">
-                  {tag}
+              {type && (
+                <span className="bg-em/10 border border-em/40 text-em text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md">
+                  {type}
                 </span>
-              ))}
+              )}
+              {difficulty && (
+                <span className="bg-amber/10 border border-amber/40 text-amber text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md">
+                  {difficulty}
+                </span>
+              )}
             </div>
           )}
-          {tip && <p className="text-t4 text-xs italic border-l-2 border-em/30 pl-2">{tip}</p>}
+          {tips && (
+            <div className="flex items-start gap-2 text-t4 text-xs italic border-l-2 border-em/30 pl-2">
+              <RiLightbulbLine size={12} className="text-em flex-shrink-0 mt-0.5" />
+              <span className="whitespace-pre-wrap break-words">{tips}</span>
+            </div>
+          )}
+          {sampleAnswer && (
+            // ✅ Open by default so user sees it immediately
+            <details open className="bg-surface2 border border-border rounded-lg px-3 py-2 mt-1">
+              <summary className="label-xs flex items-center gap-1.5 cursor-pointer">
+                <RiFileTextLine size={11} className="text-em" />
+                Sample Answer
+              </summary>
+              <p className="text-t3 text-xs leading-relaxed mt-2 whitespace-pre-wrap break-words">
+                {sampleAnswer}
+              </p>
+            </details>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
+// ── Copy-to-clipboard button ──────────────────────────────────
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <button
+      onClick={copy}
+      className="text-t4 hover:text-em transition-colors flex items-center gap-1.5 text-xs font-medium"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <>
+          <RiCheckLine size={13} className="text-em" />
+          <span className="text-em">Copied!</span>
+        </>
+      ) : (
+        <>
+          <RiFileCopyLine size={13} />
+          <span>Copy</span>
+        </>
+      )}
+    </button>
+  )
+}
+
 // ── Generate Questions tab ────────────────────────────────────
-function GenerateTab({ incomingJobTitle, incomingCompany, onQuestionsGenerated }) {
-  const [selectedTypes, setTypes]   = useState(['Technical', 'Behavioral'])
-  const [roleType, setRoleType]     = useState(incomingJobTitle || 'Senior Software Engineer')
-  const [difficulty, setDifficulty] = useState('Staff/Architect')
-  const [count, setCount]           = useState(8)
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
-  const [questions, setQuestions]   = useState([])
-  const [readiness, setReadiness]   = useState(null)
+function GenerateTab({
+  jobTitle, setJobTitle,
+  jobDescription, setJobDesc,
+  selectedTypes, setTypes,
+  numQuestions, setNumQuestions,
+  questions, setQuestions,
+  incomingJobTitle,
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
+  const [rawData, setRawData] = useState(null)  // ✅ debug viewer
+
+  useEffect(() => {
+    if (incomingJobTitle && !jobTitle) {
+      setJobTitle(incomingJobTitle)
+    }
+  }, [incomingJobTitle])
 
   const toggleType = (t) => setTypes(prev =>
     prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
@@ -148,21 +449,29 @@ function GenerateTab({ incomingJobTitle, incomingCompany, onQuestionsGenerated }
 
   const generate = async () => {
     if (selectedTypes.length === 0) { setError('Select at least one question type.'); return }
+    if (!jobTitle.trim()) { setError('Enter a job title.'); return }
     setLoading(true)
     setError('')
     try {
-      const res = await interviewApi.generateQuestions({
-        job_title:      roleType,
-        company:        incomingCompany || '',
-        question_types: selectedTypes,
-        count,
-        difficulty,
-      })
-      const qs = res?.questions || (Array.isArray(res) ? res : [])
+      const payload = {
+        job_title:       jobTitle.trim(),
+        job_description: jobDescription.trim(),
+        num_questions:   numQuestions,
+        question_types:  selectedTypes,
+      }
+      const res = await interviewApi.generateQuestions(payload)
+
+      // ✅ Save raw for debug
+      const rawParsed = unwrapEnvelope(parseAIResponse(res))
+      setRawData(rawParsed)
+      console.log('[Generate] raw response keys:', Object.keys(rawParsed))
+      if (Array.isArray(rawParsed?.questions) || Array.isArray(rawParsed?.items) || Array.isArray(rawParsed?.data)) {
+        const arr = rawParsed.questions || rawParsed.items || rawParsed.data
+        console.log('[Generate] first question keys:', Object.keys(arr[0] || {}))
+      }
+
+      const qs = extractQuestions(res)
       setQuestions(qs)
-      // Readiness score may come from the response or not be present at all
-      setReadiness(res?.readiness_score ?? res?.confidence ?? null)
-      onQuestionsGenerated?.(qs)
     } catch (e) {
       setError(errMessage(e, 'Could not generate questions. Please try again.'))
     } finally {
@@ -171,145 +480,142 @@ function GenerateTab({ incomingJobTitle, incomingCompany, onQuestionsGenerated }
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-      {/* Left */}
-      <div className="flex flex-col gap-5">
-        {/* Config card */}
-        <div className="card px-5 py-5">
-          <h2 className="text-em font-bold text-base mb-5">Question Configuration</h2>
+    <div className="flex flex-col gap-5">
+      <div className="card px-5 py-5">
+        <h2 className="text-em font-bold text-base mb-5 flex items-center gap-2">
+          <RiSparklingLine size={16} />
+          Question Configuration
+        </h2>
 
-          <div className="flex flex-col gap-5">
-            <div>
-              <span className="label-xs block mb-3">Question Types</span>
-              <div className="flex flex-wrap gap-2">
-                {Q_TYPES.map(({ key, icon, color }) => (
-                  <TypeChip
-                    key={key} label={key} icon={icon} color={color}
-                    active={selectedTypes.includes(key)}
-                    onClick={() => toggleType(key)}
-                  />
-                ))}
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label className="label-xs">Job Title *</label>
+            <input
+              value={jobTitle}
+              onChange={e => setJobTitle(e.target.value)}
+              placeholder="e.g. Senior Software Engineer"
+              className="input-base"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="label-xs">
+              Job Description
+              <span className="text-t4 ml-2 normal-case font-normal">(optional, improves accuracy)</span>
+            </label>
+            <textarea
+              value={jobDescription}
+              onChange={e => setJobDesc(e.target.value)}
+              placeholder="Paste the job posting here for more accurate questions…"
+              rows={4}
+              className="input-base resize-y"
+            />
+          </div>
+
+          <div>
+            <span className="label-xs block mb-3">Question Types</span>
+            <div className="flex flex-wrap gap-2">
+              {Q_TYPES.map(({ key, Icon, color }) => (
+                <TypeChip
+                  key={key} label={key} Icon={Icon} color={color}
+                  active={selectedTypes.includes(key)}
+                  onClick={() => toggleType(key)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex flex-col gap-1.5">
+              <span className="label-xs">Number of Questions</span>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setNumQuestions(c => Math.max(1, c - 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">−</button>
+                <span className="text-t1 font-bold w-6 text-center">{numQuestions}</span>
+                <button onClick={() => setNumQuestions(c => Math.min(20, c + 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">+</button>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Select
-                label="Role Type"
-                value={roleType}
-                onChange={setRoleType}
-                options={[
-                  'Junior Developer', 'Mid-level Engineer', 'Senior Software Engineer',
-                  'Staff Engineer', 'Principal Engineer', 'Engineering Manager',
-                  'Product Manager', 'Data Scientist', 'ML Engineer', 'DevOps Engineer',
-                ]}
-              />
-              <Select
-                label="Difficulty"
-                value={difficulty}
-                onChange={setDifficulty}
-                options={['Junior', 'Mid-level', 'Senior', 'Staff/Architect', 'Principal']}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-1.5">
-                <span className="label-xs">Number of Questions</span>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setCount(c => Math.max(1, c - 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">−</button>
-                  <span className="text-t1 font-bold w-6 text-center">{count}</span>
-                  <button onClick={() => setCount(c => Math.min(20, c + 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">+</button>
-                </div>
-              </div>
-              <button
-                onClick={generate}
-                disabled={loading}
-                className="btn-primary !w-auto px-6 gap-2"
-              >
-                {loading ? <RiLoader4Line size={15} className="animate-spin" /> : <RiMicLine size={15} />}
-                Generate
-              </button>
-            </div>
+            <button onClick={generate} disabled={loading} className="btn-primary !w-auto px-6 gap-2">
+              {loading ? <RiLoader4Line size={15} className="animate-spin" /> : <RiSparklingLine size={15} />}
+              Generate Questions
+            </button>
           </div>
-        </div>
-
-        {error && (
-          <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-5 py-3">{error}</div>
-        )}
-
-        {/* Generated questions */}
-        {loading && (
-          <div className="flex items-center justify-center py-16 gap-3">
-            <RiLoader4Line size={22} className="text-em animate-spin" />
-            <span className="text-t3 text-sm">AI is generating questions…</span>
-          </div>
-        )}
-
-        {!loading && questions.length > 0 && (
-          <div className="flex flex-col gap-3">
-            <span className="label-xs">Generated Questions</span>
-            {questions.map((q, i) => (
-              <QuestionCard key={i} n={i + 1} question={q} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Right panel */}
-      <div className="flex flex-col gap-4">
-        {/* Readiness score */}
-        <div className="card px-5 py-6 flex flex-col gap-5">
-          <span className="label-xs">Readiness Score</span>
-          <ReadinessRing score={readiness ?? 75} />
-          <div className="flex flex-col gap-3 mt-1">
-            {[
-              { label: 'Technical Proficiency', value: readiness ? Math.min(100, readiness + 10) : 80, text: 'High',     color: 'bg-em' },
-              { label: 'Communication',          value: readiness ? Math.max(0, readiness - 15) : 60, text: 'Moderate', color: 'bg-amber' },
-            ].map(({ label, value, text, color }) => (
-              <div key={label}>
-                <div className="flex justify-between text-xs mb-1.5">
-                  <span className="text-t2">{label}</span>
-                  <span className={`font-semibold ${color === 'bg-em' ? 'text-em' : 'text-amber'}`}>{text}</span>
-                </div>
-                <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                  <div className={`h-full ${color} rounded-full`} style={{ width: `${value}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* AI Mock Interviewer */}
-        <div className="card px-5 py-5 flex flex-col gap-4">
-          <span className="label-xs">AI Mock Interviewer</span>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-surface3 border border-border2 flex items-center justify-center text-t2 flex-shrink-0">
-              <RiUser3Line size={20} />
-            </div>
-            <div>
-              <div className="text-t1 font-bold">Aria-1</div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-em" />
-                <span className="text-em text-[11px] font-semibold uppercase tracking-wide">Online</span>
-              </div>
-            </div>
-          </div>
-          <button className="w-full bg-surface2 border border-border text-t2 font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl hover:border-border2 hover:text-t1 transition-all">
-            Schedule Mock Call
-          </button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-5 py-3">{error}</div>
+      )}
+
+      {loading && (
+        <div className="flex items-center justify-center py-16 gap-3">
+          <RiLoader4Line size={22} className="text-em animate-spin" />
+          <span className="text-t3 text-sm">AI is generating questions…</span>
+        </div>
+      )}
+
+      {!loading && questions.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="label-xs flex items-center gap-2">
+              <RiCheckLine size={14} className="text-em" />
+              {questions.length} questions generated
+              {jobTitle && <span className="text-t4">for {jobTitle}</span>}
+            </span>
+            <button onClick={() => setQuestions([])} className="text-t4 hover:text-red text-xs font-medium transition-colors">
+              Clear
+            </button>
+          </div>
+          {questions.map((q, i) => (
+            <QuestionCard key={i} n={i + 1} question={q} />
+          ))}
+
+          {/* ✅ Debug viewer */}
+          {rawData && (
+            <details className="card px-5 py-4">
+              <summary className="label-xs cursor-pointer text-t4 hover:text-t2">
+                🔍 Debug: View all response fields
+              </summary>
+              <div className="mt-3">
+                <p className="text-t4 text-xs mb-2">Fields in response:</p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {Object.keys(rawData).map(k => (
+                    <span key={k} className="bg-surface2 border border-border text-t2 text-[10px] font-mono px-2 py-0.5 rounded">
+                      {k}
+                    </span>
+                  ))}
+                </div>
+                <pre className="p-3 bg-bg rounded text-[10px] overflow-auto max-h-80 text-t2 whitespace-pre-wrap break-all">
+                  {JSON.stringify(rawData, null, 2)}
+                </pre>
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+
+      {!loading && questions.length === 0 && !error && (
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
+          <div className="w-14 h-14 rounded-full bg-surface3 border border-border flex items-center justify-center mb-2">
+            <RiFileTextLine size={22} className="text-t4" />
+          </div>
+          <p className="text-t2 text-sm font-medium">Configure your questions above</p>
+          <p className="text-t4 text-xs">Enter a job title, pick question types, and click Generate.</p>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Evaluate Answer tab ───────────────────────────────────────
-function EvaluateTab() {
-  const [question, setQuestion]   = useState('')
-  const [answer, setAnswer]       = useState('')
-  const [jobTitle, setJobTitle]   = useState('')
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState('')
-  const [result, setResult]       = useState(null)
+function EvaluateTab({
+  question, setQuestion,
+  answer, setAnswer,
+  questionType, setType,
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
+  const [result, setResult]   = useState(null)
+  const [rawData, setRawData] = useState(null)
 
   const evaluate = async () => {
     if (!question.trim() || !answer.trim()) {
@@ -318,13 +624,25 @@ function EvaluateTab() {
     }
     setLoading(true)
     setError('')
+    setResult(null)
     try {
-      const res = await interviewApi.evaluateAnswer({
-        question: question.trim(),
-        answer:   answer.trim(),
-        job_title: jobTitle.trim() || undefined,
-      })
-      setResult(res)
+      const payload = {
+        question:      question.trim(),
+        answer:        answer.trim(),
+        question_type: questionType,
+      }
+      const res = await interviewApi.evaluateAnswer(payload)
+
+      const rawParsed = unwrapEnvelope(parseAIResponse(res))
+      setRawData(rawParsed)
+      console.log('[Interview] evaluate RAW parsed:', rawParsed)
+      console.log('[Interview] evaluate field names:', Object.keys(rawParsed))
+
+      const ev = extractEvaluation(res)
+      console.log('[Interview] extracted improved answer length:', ev.improved?.length)
+      console.log('[Interview] extracted improved answer preview:', ev.improved?.slice(0, 100))
+
+      setResult(ev)
     } catch (e) {
       setError(errMessage(e, 'Evaluation failed. Please try again.'))
     } finally {
@@ -332,21 +650,25 @@ function EvaluateTab() {
     }
   }
 
-  const score    = result?.score ?? null
-  const scoreColor = score === null ? 'text-t4' : score >= 7 ? 'text-em' : score >= 5 ? 'text-amber' : 'text-red'
-  const verdict  = result?.verdict ?? ''
-  const feedback = result?.feedback ?? ''
-  const improved = result?.improved_answer ?? ''
+  const score        = result?.score ?? null
+  const scoreColor   = score === null ? 'text-t4' : score >= 7 ? 'text-em' : score >= 5 ? 'text-amber' : 'text-red'
+  const verdict      = result?.verdict ?? ''
+  const feedback     = result?.feedback ?? ''
+  const strengths    = result?.strengths ?? []
+  const improvements = result?.improvements ?? []
+  const improved     = result?.improved ?? ''
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="flex flex-col gap-4">
-        <input
-          value={jobTitle}
-          onChange={e => setJobTitle(e.target.value)}
-          placeholder="Job title context (optional)…"
-          className="input-base"
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      {/* Left — Inputs */}
+      <div className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
+        <CustomDropdown
+          label="Question Type"
+          value={questionType}
+          onChange={setType}
+          options={['behavioral', 'technical', 'situational']}
         />
+
         <div className="flex flex-col gap-1.5">
           <label className="label-xs">Interview Question</label>
           <textarea
@@ -357,6 +679,7 @@ function EvaluateTab() {
             className="input-base resize-none"
           />
         </div>
+
         <div className="flex flex-col gap-1.5">
           <label className="label-xs">Your Answer</label>
           <textarea
@@ -367,44 +690,148 @@ function EvaluateTab() {
             className="input-base resize-none"
           />
         </div>
+
         {error && (
           <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-5 py-3">{error}</div>
         )}
+
         <button onClick={evaluate} disabled={loading} className="btn-primary gap-2">
-          {loading ? <RiLoader4Line size={15} className="animate-spin" /> : '⚡'}
+          {loading ? <RiLoader4Line size={15} className="animate-spin" /> : <RiSparklingLine size={15} />}
           Evaluate Answer
         </button>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {result ? (
-          <>
-            <div className="card px-5 py-5 flex items-center gap-5">
-              <span className={`text-5xl font-extrabold ${scoreColor}`}>{score}<span className="text-2xl text-t4">/10</span></span>
-              <div>
-                <div className="text-t1 font-bold">{verdict}</div>
-                <div className="text-t4 text-xs mt-1">AI Evaluation Score</div>
-              </div>
-            </div>
-            {feedback && (
-              <div className="card px-5 py-4">
-                <span className="label-xs block mb-3">Feedback</span>
-                <p className="text-t2 text-sm leading-relaxed">{feedback}</p>
-              </div>
-            )}
-            {improved && (
-              <div className="card px-5 py-4">
-                <span className="label-xs block mb-3">Stronger Answer</span>
-                <p className="text-t3 text-sm leading-relaxed">{improved}</p>
-              </div>
-            )}
-          </>
-        ) : (
+      {/* Right — Results */}
+      <div className="flex flex-col gap-4 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
+        {!result && !loading && (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
-            <span className="text-3xl mb-2">⚡</span>
+            <div className="w-14 h-14 rounded-full bg-surface3 border border-border flex items-center justify-center mb-2">
+              <RiChatQuoteLine size={22} className="text-t4" />
+            </div>
             <p className="text-t2 text-sm font-medium">Paste a question and your answer</p>
             <p className="text-t4 text-xs">AI will score it 0-10 and give detailed feedback.</p>
           </div>
+        )}
+
+        {loading && (
+          <div className="flex items-center justify-center py-20 gap-3">
+            <RiLoader4Line size={22} className="text-em animate-spin" />
+            <span className="text-t3 text-sm">Evaluating your answer…</span>
+          </div>
+        )}
+
+        {result && !loading && (
+          <>
+            {/* Score card */}
+            <div className="card px-5 py-5 flex items-center gap-5">
+              <span className={`text-5xl font-extrabold ${scoreColor}`}>
+                {score !== null ? score : '—'}
+                <span className="text-2xl text-t4">/10</span>
+              </span>
+              <div>
+                <div className="text-t1 font-bold">{verdict || 'AI Evaluation'}</div>
+                <div className="text-t4 text-xs mt-1">
+                  {score !== null && (score >= 7 ? 'Strong answer' : score >= 5 ? 'Decent answer' : 'Needs improvement')}
+                </div>
+              </div>
+            </div>
+
+            {/* Feedback */}
+            {feedback && (
+              <div className="card px-5 py-4">
+                <span className="label-xs block mb-3 flex items-center gap-2">
+                  <RiChatQuoteLine size={12} className="text-em" />
+                  Feedback
+                </span>
+                <p className="text-t2 text-sm leading-relaxed whitespace-pre-wrap break-words">{feedback}</p>
+              </div>
+            )}
+
+            {/* Strengths + Improvements */}
+            {(strengths.length > 0 || improvements.length > 0) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {strengths.length > 0 && (
+                  <div className="card px-5 py-4">
+                    <span className="label-xs block mb-3 flex items-center gap-2 text-em">
+                      <RiCheckLine size={12} />
+                      Strengths
+                    </span>
+                    <ul className="flex flex-col gap-2">
+                      {strengths.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-t2 text-xs">
+                          <RiCheckLine size={12} className="text-em flex-shrink-0 mt-0.5" />
+                          {typeof s === 'string' ? s : JSON.stringify(s)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {improvements.length > 0 && (
+                  <div className="card px-5 py-4">
+                    <span className="label-xs block mb-3 flex items-center gap-2 text-amber">
+                      <RiArrowRightLine size={12} />
+                      Improvements
+                    </span>
+                    <ul className="flex flex-col gap-2">
+                      {improvements.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-t2 text-xs">
+                          <RiArrowRightLine size={12} className="text-amber flex-shrink-0 mt-0.5" />
+                          {typeof s === 'string' ? s : JSON.stringify(s)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ✅ Stronger Answer — show warning if missing */}
+            {improved && improved.trim() ? (
+              <div className="card px-5 py-4 border-em/30 bg-em/[0.03]">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="label-xs flex items-center gap-2 text-em">
+                    <RiSparklingLine size={12} />
+                    Stronger Answer
+                  </span>
+                  <CopyButton text={improved} />
+                </div>
+                <p className="text-t2 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                  {improved}
+                </p>
+              </div>
+            ) : (
+              <div className="card px-5 py-4 border-amber/30 bg-amber/[0.03]">
+                <span className="label-xs flex items-center gap-2 text-amber">
+                  ⚠ Improved answer not found in response
+                </span>
+                <p className="text-t4 text-xs mt-2">
+                  Check the debug panel below to see what fields the backend returned.
+                </p>
+              </div>
+            )}
+
+            {/* ✅ Debug viewer */}
+            {rawData && (
+              <details className="card px-5 py-4">
+                <summary className="label-xs cursor-pointer text-t4 hover:text-t2">
+                  🔍 Debug: View all response fields
+                </summary>
+                <div className="mt-3">
+                  <p className="text-t4 text-xs mb-2">Fields in response:</p>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {Object.keys(rawData).map(k => (
+                      <span key={k} className="bg-surface2 border border-border text-t2 text-[10px] font-mono px-2 py-0.5 rounded">
+                        {k}
+                      </span>
+                    ))}
+                  </div>
+                  <pre className="p-3 bg-bg rounded text-[10px] overflow-auto max-h-80 text-t2 whitespace-pre-wrap break-all">
+                    {JSON.stringify(rawData, null, 2)}
+                  </pre>
+                </div>
+              </details>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -412,27 +839,31 @@ function EvaluateTab() {
 }
 
 // ── Study Plan tab ────────────────────────────────────────────
-function StudyPlanTab() {
-  const [role, setRole]         = useState('')
-  const [level, setLevel]       = useState('Intermediate')
-  const [weeks, setWeeks]       = useState(4)
-  const [weakAreas, setWeakAreas] = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState('')
-  const [plan, setPlan]         = useState(null)
+function StudyPlanTab({
+  studyJobTitle, setStudyJobTitle,
+  studyJobDesc, setStudyJobDesc,
+  days, setDays,
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
+  const [plan, setPlan]       = useState(null)
+  const [rawResponse, setRawResponse] = useState(null)
 
   const generate = async () => {
-    if (!role.trim()) { setError('Enter a target role.'); return }
+    if (!studyJobTitle.trim()) { setError('Enter a target job title.'); return }
     setLoading(true)
     setError('')
     try {
-      const res = await interviewApi.studyPlan({
-        target_role:    role.trim(),
-        current_level:  level,
-        weeks_available: weeks,
-        weak_areas: weakAreas.split(',').map(s => s.trim()).filter(Boolean),
-      })
-      setPlan(res)
+      const payload = {
+        job_title:           studyJobTitle.trim(),
+        job_description:     studyJobDesc.trim(),
+        days_until_interview: days,
+      }
+      const res = await interviewApi.studyPlan(payload)
+      setRawResponse(res)
+
+      const { plan: weekItems, resources } = extractPlan(res)
+      setPlan({ items: weekItems, resources })
     } catch (e) {
       setError(errMessage(e, 'Could not generate study plan.'))
     } finally {
@@ -440,43 +871,64 @@ function StudyPlanTab() {
     }
   }
 
-  const weekItems = plan?.plan || (Array.isArray(plan) ? plan : null)
+  const weekItems = plan?.items || []
   const resources = plan?.resources || []
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       <div className="flex flex-col gap-4">
-        <input
-          value={role}
-          onChange={e => setRole(e.target.value)}
-          placeholder="Target role, e.g. Senior AI Engineer…"
-          className="input-base"
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <Select label="Current Level" value={level} onChange={setLevel}
-            options={['Beginner','Intermediate','Advanced','Expert']} />
+        <div className="flex flex-col gap-1.5">
+          <label className="label-xs">Target Job Title *</label>
+          <input
+            value={studyJobTitle}
+            onChange={e => setStudyJobTitle(e.target.value)}
+            placeholder="e.g. Senior AI Engineer"
+            className="input-base"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="label-xs">
+            Job Description
+            <span className="text-t4 ml-2 normal-case font-normal">(optional)</span>
+          </label>
+          <textarea
+            value={studyJobDesc}
+            onChange={e => setStudyJobDesc(e.target.value)}
+            placeholder="Paste the job posting for tailored topics…"
+            rows={4}
+            className="input-base resize-y"
+          />
+        </div>
+
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="label-xs">Weeks Available</label>
+            <label className="label-xs">Days Until Interview</label>
             <div className="flex items-center gap-3">
-              <button onClick={() => setWeeks(w => Math.max(1, w - 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 transition-all">−</button>
-              <span className="text-t1 font-bold w-6 text-center">{weeks}</span>
-              <button onClick={() => setWeeks(w => Math.min(24, w + 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 transition-all">+</button>
+              <button onClick={() => setDays(d => Math.max(1, d - 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">−</button>
+              <span className="text-t1 font-bold w-6 text-center">{days}</span>
+              <button onClick={() => setDays(d => Math.min(90, d + 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">+</button>
             </div>
           </div>
+          <button onClick={generate} disabled={loading} className="btn-primary gap-2">
+            {loading ? <RiLoader4Line size={15} className="animate-spin" /> : <RiBookOpenLine size={15} />}
+            Generate Plan
+          </button>
         </div>
-        <input
-          value={weakAreas}
-          onChange={e => setWeakAreas(e.target.value)}
-          placeholder="Weak areas (comma-separated, e.g. System Design, DSA)…"
-          className="input-base"
-        />
+
         {error && (
-          <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-5 py-3">{error}</div>
+          <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-5 py-3">
+            {error}
+            {rawResponse && (
+              <details className="mt-2 text-xs text-t4">
+                <summary className="cursor-pointer">Show raw response</summary>
+                <pre className="mt-2 p-2 bg-bg rounded text-[10px] overflow-auto max-h-40">
+                  {typeof rawResponse === 'string' ? rawResponse.slice(0, 500) : JSON.stringify(rawResponse, null, 2).slice(0, 500)}
+                </pre>
+              </details>
+            )}
+          </div>
         )}
-        <button onClick={generate} disabled={loading} className="btn-primary gap-2">
-          {loading ? <RiLoader4Line size={15} className="animate-spin" /> : <RiBookOpenLine size={15} />}
-          Generate Study Plan
-        </button>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -489,42 +941,74 @@ function StudyPlanTab() {
 
         {!loading && !plan && (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
-            <span className="text-3xl mb-2">📚</span>
+            <div className="w-14 h-14 rounded-full bg-surface3 border border-border flex items-center justify-center mb-2">
+              <RiBookOpenLine size={22} className="text-t4" />
+            </div>
             <p className="text-t2 text-sm font-medium">Fill in your details and generate a plan</p>
-            <p className="text-t4 text-xs">AI creates a week-by-week roadmap tailored to your role.</p>
+            <p className="text-t4 text-xs">AI creates a day-by-day roadmap tailored to your timeline.</p>
           </div>
         )}
 
-        {!loading && weekItems && (
-          <div className="flex flex-col gap-3 overflow-y-auto max-h-[600px]">
+        {!loading && plan && weekItems.length === 0 && (
+          <div className="card px-5 py-5">
+            <span className="label-xs block mb-3 text-amber">⚠ No plan items found in response</span>
+            <p className="text-t3 text-sm mb-3">The backend returned data but we couldn't extract a plan structure.</p>
+            <details className="text-xs">
+              <summary className="cursor-pointer text-cyan">View raw response</summary>
+              <pre className="mt-2 p-3 bg-bg rounded text-[10px] overflow-auto max-h-80 whitespace-pre-wrap break-all">
+                {typeof rawResponse === 'string' ? rawResponse : JSON.stringify(rawResponse, null, 2)}
+              </pre>
+            </details>
+          </div>
+        )}
+
+        {!loading && weekItems.length > 0 && (
+          <div className="flex flex-col gap-3 overflow-y-auto max-h-[600px] pr-1">
             {weekItems.map((w, i) => {
-              const week   = w.week ?? (i + 1)
-              const theme  = w.theme ?? w.title ?? ''
-              const topics = w.topics ?? w.content ?? []
+              const dayNum   = w.day ?? w.week ?? w.day_number ?? (i + 1)
+              const theme    = w.theme ?? w.title ?? w.topic ?? ''
+              const topics   = w.topics ?? w.content ?? w.tasks ?? w.activities ?? w.subtopics ?? []
+              const isWeek   = !w.day && (w.week !== undefined || w.day_number !== undefined)
+              const topicsArr = Array.isArray(topics) ? topics : (typeof topics === 'string' ? [topics] : [])
+
               return (
                 <div key={i} className="card px-4 py-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="bg-em text-bg text-[10px] font-bold px-2 py-0.5 rounded-md">W{week}</span>
-                    <span className="text-t1 font-semibold text-sm">{theme}</span>
+                    <span className={`${isWeek ? 'bg-em text-bg' : 'bg-cyan text-bg'} text-[10px] font-bold px-2 py-0.5 rounded-md uppercase`}>
+                      {isWeek ? `W${dayNum}` : `D${dayNum}`}
+                    </span>
+                    <span className="text-t1 font-semibold text-sm">{theme || `Day ${dayNum}`}</span>
                   </div>
-                  <ul className="flex flex-col gap-1.5">
-                    {(Array.isArray(topics) ? topics : [topics]).map((t, j) => (
-                      <li key={j} className="flex items-start gap-2 text-t3 text-xs">
-                        <RiCheckboxCircleLine size={13} className="text-em flex-shrink-0 mt-0.5" />
-                        {typeof t === 'string' ? t : JSON.stringify(t)}
-                      </li>
-                    ))}
-                  </ul>
+                  {topicsArr.length > 0 ? (
+                    <ul className="flex flex-col gap-1.5">
+                      {topicsArr.map((t, j) => {
+                        const topicText = typeof t === 'string' ? t : (t?.topic || t?.title || t?.name || JSON.stringify(t))
+                        return (
+                          <li key={j} className="flex items-start gap-2 text-t3 text-xs">
+                            <RiCheckboxCircleLine size={13} className="text-em flex-shrink-0 mt-0.5" />
+                            <span className="whitespace-pre-wrap break-words">{topicText}</span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-t4 text-xs italic">No topics listed for this day.</p>
+                  )}
                 </div>
               )
             })}
+
             {resources.length > 0 && (
               <div className="card px-4 py-4">
-                <span className="label-xs block mb-3">Recommended Resources</span>
+                <span className="label-xs block mb-3 flex items-center gap-2">
+                  <RiBookOpenLine size={12} className="text-cyan" />
+                  Recommended Resources
+                </span>
                 <ul className="flex flex-col gap-1.5">
                   {resources.map((r, i) => (
-                    <li key={i} className="text-cyan text-xs hover:underline cursor-pointer">
-                      {typeof r === 'string' ? r : r.title ?? r.url ?? JSON.stringify(r)}
+                    <li key={i} className="flex items-start gap-2 text-cyan text-xs">
+                      <RiArrowRightLine size={12} className="flex-shrink-0 mt-0.5" />
+                      {typeof r === 'string' ? r : r.title ?? r.url ?? r.name ?? JSON.stringify(r)}
                     </li>
                   ))}
                 </ul>
@@ -542,36 +1026,72 @@ export default function Interview() {
   const location = useLocation()
   const state    = location.state || {}
   const [tab, setTab] = useState('Generate Questions')
-  const [questions, setQuestions] = useState([])
+
+  const [genJobTitle, setGenJobTitle]         = useState('')
+  const [genJobDesc, setGenJobDesc]           = useState('')
+  const [genSelectedTypes, setGenTypes]       = useState(['Technical', 'Behavioral'])
+  const [genNumQuestions, setGenNumQuestions] = useState(8)
+  const [genQuestions, setGenQuestions]       = useState([])
+
+  const [evalQuestion, setEvalQuestion]       = useState('')
+  const [evalAnswer, setEvalAnswer]           = useState('')
+  const [evalQuestionType, setEvalType]       = useState('behavioral')
+
+  const [studyJobTitle, setStudyJobTitle]     = useState('')
+  const [studyJobDesc, setStudyJobDesc]       = useState('')
+  const [studyDays, setStudyDays]             = useState(7)
 
   return (
     <div className="animate-in">
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-7">
         <div>
           <h1 className="text-3xl font-extrabold text-t1 tracking-tight flex items-center gap-3">
-            🎤 Interview Prep
+            <RiMicLine size={26} className="text-t3" />
+            Interview Prep
           </h1>
           <p className="text-t3 text-sm mt-1.5">
             Master your next career move with AI-powered simulations and feedback.
           </p>
         </div>
-        <button className="btn-primary !w-auto px-6 gap-2">
-          <RiPlayCircleLine size={16} /> Start Simulation
-        </button>
       </div>
 
       <TabBar active={tab} onChange={setTab} />
 
       {tab === 'Generate Questions' && (
         <GenerateTab
+          jobTitle={genJobTitle}
+          setJobTitle={setGenJobTitle}
+          jobDescription={genJobDesc}
+          setJobDesc={setGenJobDesc}
+          selectedTypes={genSelectedTypes}
+          setTypes={setGenTypes}
+          numQuestions={genNumQuestions}
+          setNumQuestions={setGenNumQuestions}
+          questions={genQuestions}
+          setQuestions={setGenQuestions}
           incomingJobTitle={state.jobTitle}
-          incomingCompany={state.company}
-          onQuestionsGenerated={setQuestions}
         />
       )}
-      {tab === 'Evaluate Answer'    && <EvaluateTab />}
-      {tab === 'Study Plan'         && <StudyPlanTab />}
+      {tab === 'Evaluate Answer' && (
+        <EvaluateTab
+          question={evalQuestion}
+          setQuestion={setEvalQuestion}
+          answer={evalAnswer}
+          setAnswer={setEvalAnswer}
+          questionType={evalQuestionType}
+          setType={setEvalType}
+        />
+      )}
+      {tab === 'Study Plan' && (
+        <StudyPlanTab
+          studyJobTitle={studyJobTitle}
+          setStudyJobTitle={setStudyJobTitle}
+          studyJobDesc={studyJobDesc}
+          setStudyJobDesc={setStudyJobDesc}
+          days={studyDays}
+          setDays={setStudyDays}
+        />
+      )}
     </div>
   )
 }
