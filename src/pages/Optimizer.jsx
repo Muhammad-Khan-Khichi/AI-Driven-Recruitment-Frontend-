@@ -2,11 +2,22 @@ import { useState } from 'react'
 import {
   RiMagicLine, RiFileTextLine, RiBriefcaseLine,
   RiCheckboxCircleLine, RiDownload2Line, RiLoader4Line,
-  RiSparklingLine,
+  RiSparklingLine, RiLineChartLine, RiFileEditLine,
+  RiAlertLine, RiQuestionLine, RiFileChartLine,
 } from 'react-icons/ri'
 import { resumeApi } from './api/resume'
 import { useResume } from './context/ResumeContext'
 import { errMessage } from './utils/errors'
+
+// ── Text normalizer ──────────────────────────────────────────
+function normalizeText(text) {
+  if (!text) return ''
+  return text
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/([A-Za-z])\s+([A-Za-z])/g, '$1$2')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
 
 // ── Score ring ────────────────────────────────────────────────
 function ScoreRing({ score, size = 96 }) {
@@ -34,7 +45,6 @@ function ScoreRing({ score, size = 96 }) {
   )
 }
 
-// ── Relevancy label ───────────────────────────────────────────
 function relevancyColor(val) {
   const v = (val || '').toLowerCase()
   if (v === 'high' || v === 'excellent') return 'text-em'
@@ -42,7 +52,6 @@ function relevancyColor(val) {
   return 'text-red'
 }
 
-// ── Download helper ───────────────────────────────────────────
 function downloadText(content, filename) {
   const blob = new Blob([content], { type: 'text/plain' })
   const url  = URL.createObjectURL(blob)
@@ -51,15 +60,14 @@ function downloadText(content, filename) {
   URL.revokeObjectURL(url)
 }
 
-// ── Main page ─────────────────────────────────────────────────
 export default function Optimizer() {
   const { resumeData } = useResume()
 
-  const [jobDesc, setJobDesc]     = useState('')
+  const [jobDesc, setJobDesc]       = useState('')
   const [resumeText, setResumeText] = useState('')
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState('')
-  const [result, setResult]       = useState(null)
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState('')
+  const [result, setResult]         = useState(null)
 
   const canOptimize = jobDesc.trim().length > 20 && resumeText.trim().length > 50
 
@@ -75,39 +83,54 @@ export default function Optimizer() {
       const res = await resumeApi.optimize({
         job_description: jobDesc.trim(),
         resume_text:     resumeText.trim(),
-        job_title:       '',   // optional — user didn't enter a separate title field
+        job_title:       '',
       })
+      console.log('[Optimizer] API response:', res)
       setResult(res)
     } catch (e) {
+      console.error('[Optimizer] API error:', e)
       setError(errMessage(e, 'Optimization failed. Please try again.'))
     } finally {
       setLoading(false)
     }
   }
 
-  // Extract result fields defensively — API schema is "string" in docs so
-  // we check multiple possible field names for each concept.
-  const atsScore       = result?.score        ?? result?.ats_score    ?? result?.match_score ?? null
-  const relevancy      = result?.relevancy    ?? result?.relevance     ?? null
-  const keywordMatch   = result?.keyword_match ?? result?.keywords_matched ?? null
-  const keywordTotal   = result?.keyword_total ?? result?.total_keywords   ?? null
-  const suggestions    = result?.suggestions  ?? result?.improvements ?? []
-  const optimizedText  = result?.optimized_text ?? result?.rewritten_resume ?? result?.content ?? ''
+  const atsScore     = result?.ats_score    ?? result?.score    ?? result?.match_score ?? null
+  const relevancy    = result?.relevancy    ?? result?.relevance ?? null
+  const keywordMatch = result?.keyword_match ?? result?.keywords_matched ?? null
+  const keywordTotal = result?.keyword_total ?? result?.total_keywords ?? null
 
-  // Header match accuracy — derived from ATS score or keyword match
-  const headerAccuracy = atsScore !== null
-    ? `${atsScore}%`
-    : keywordMatch !== null && keywordTotal
-      ? `${Math.round((keywordMatch / keywordTotal) * 100)}%`
-      : null
+  // ✅ Use the normalizer for ALL text fields
+  const summary = normalizeText(
+    result?.summary ?? result?.optimized_text ?? result?.rewritten_resume ?? ''
+  )
+  const missingKws = result?.missing_keywords ?? []
+
+  const allBullets = [
+    ...(result?.weak_bullets     || []),
+    ...(result?.suggested_bullets || []),
+    ...(result?.gaps              || []),
+    ...(result?.suggestions       || []),
+    ...(result?.improvements      || []),
+  ].map(b => {
+    const text = typeof b === 'string' ? b : (b.text ?? b.suggestion ?? JSON.stringify(b))
+    return normalizeText(text)
+  }).filter(Boolean)
+
+  const strengths = (result?.strengths || []).map(s => {
+    const text = typeof s === 'string' ? s : (s.text ?? JSON.stringify(s))
+    return normalizeText(text)
+  }).filter(Boolean)
+
+  const headerAccuracy = atsScore !== null ? `${atsScore}%` : null
 
   return (
     <div className="animate-in">
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-7">
         <div>
           <h1 className="text-3xl font-extrabold text-t1 tracking-tight flex items-center gap-3">
-            📝 Resume Optimizer
+            <RiFileEditLine size={28} className="text-em" />
+            Resume Optimizer
           </h1>
           <p className="text-t3 text-sm mt-1.5 max-w-2xl">
             Align your professional profile with target job requirements using neural semantic analysis.
@@ -120,20 +143,22 @@ export default function Optimizer() {
               <div className="text-em font-extrabold text-2xl leading-tight">{headerAccuracy}</div>
             </div>
             <div className="w-10 h-10 rounded-full border-2 border-em flex items-center justify-center text-em">
-              📈
+              <RiLineChartLine size={18} />
             </div>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-5 py-3 mb-5">{error}</div>
+        <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-5 py-3 mb-5 flex items-start gap-2">
+          <RiAlertLine size={16} className="flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Left — inputs */}
-        <div className="flex flex-col gap-5">
-          {/* Job description */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+        {/* Left — inputs (sticky) */}
+        <div className="flex flex-col gap-5 lg:sticky lg:top-4 self-start">
           <div className="card px-5 py-5 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <RiBriefcaseLine size={16} className="text-cyan" />
@@ -148,7 +173,6 @@ export default function Optimizer() {
             />
           </div>
 
-          {/* Current resume */}
           <div className="card px-5 py-5 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <RiFileTextLine size={16} className="text-em" />
@@ -166,111 +190,137 @@ export default function Optimizer() {
                 onClick={() => setResumeText(resumeData.text)}
                 className="text-em text-xs font-semibold self-start hover:underline"
               >
-                ↑ Use my uploaded resume
+                Use my uploaded resume
               </button>
             )}
           </div>
 
-          {/* Optimize button */}
           <button
             onClick={handleOptimize}
             disabled={loading || !canOptimize}
             className="btn-primary py-4 gap-3 text-base disabled:opacity-50"
           >
             {loading
-              ? <><RiLoader4Line size={18} className="animate-spin" /> Optimizing…</>
-              : <><RiSparklingLine size={18} /> OPTIMIZE NOW</>
+              ? <><RiLoader4Line size={18} className="animate-spin" /> Optimizing...</>
+              : <><RiMagicLine size={18} /> OPTIMIZE NOW</>
             }
           </button>
         </div>
 
-        {/* Right — results */}
-        <div className="flex flex-col gap-5">
-          {/* Score cards — shown when result exists */}
+        {/* Right — results (independent scroll) */}
+        <div className="flex flex-col gap-5 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 -mr-2 optimizer-scroll">
           {result ? (
             <>
               <div className="grid grid-cols-3 gap-3">
-                {/* ATS Score */}
                 <div className="card px-4 py-4 flex flex-col items-center gap-3">
                   <span className="label-xs">ATS Score</span>
                   {atsScore !== null
                     ? <ScoreRing score={atsScore} />
-                    : <span className="text-t4 text-sm">—</span>}
+                    : <span className="text-t4 text-sm">-</span>}
                 </div>
 
-                {/* Relevancy */}
                 <div className="card px-4 py-4 flex flex-col items-center justify-center gap-2">
                   <span className="label-xs">Relevancy</span>
                   {relevancy
                     ? <span className={`text-2xl font-extrabold capitalize ${relevancyColor(relevancy)}`}>{relevancy}</span>
-                    : <span className="text-t4 text-sm">—</span>}
+                    : <span className="text-t4 text-sm">-</span>}
                 </div>
 
-                {/* Keyword match */}
                 <div className="card px-4 py-4 flex flex-col items-center justify-center gap-2">
                   <span className="label-xs">Keyword Match</span>
                   {keywordMatch !== null
                     ? <span className="text-t1 font-extrabold text-2xl">
                         {keywordMatch}{keywordTotal ? `/${keywordTotal}` : ''}
                       </span>
-                    : <span className="text-t4 text-sm">—</span>}
+                    : <span className="text-t4 text-sm">-</span>}
                 </div>
               </div>
 
-              {/* Suggestions */}
-              {suggestions.length > 0 && (
+              {missingKws.length > 0 && (
+                <div className="card px-5 py-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <RiQuestionLine size={16} className="text-amber" />
+                    <span className="text-t1 font-semibold">Missing Keywords ({missingKws.length})</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {missingKws.map((k, i) => (
+                      <span key={i} className="text-xs bg-amber/10 text-amber border border-amber/30 px-2.5 py-1 rounded-md">
+                        {k}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {strengths.length > 0 && (
+                <div className="card px-5 py-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <RiCheckboxCircleLine size={16} className="text-em" />
+                    <span className="text-t1 font-semibold">Your Strengths</span>
+                  </div>
+                  <ul className="flex flex-col gap-3">
+                    {strengths.map((text, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-t2">
+                        <RiCheckboxCircleLine size={16} className="flex-shrink-0 mt-0.5 text-em" />
+                        {text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {allBullets.length > 0 && (
                 <div className="card px-5 py-5">
                   <div className="flex items-center gap-2 mb-4">
                     <RiSparklingLine size={16} className="text-em" />
                     <span className="text-t1 font-semibold">Optimization Suggestions</span>
                   </div>
                   <ul className="flex flex-col gap-3">
-                    {suggestions.map((s, i) => {
-                      const text = typeof s === 'string' ? s : s.suggestion ?? s.text ?? JSON.stringify(s)
-                      const active = i < 3
-                      return (
-                        <li key={i} className={`flex items-start gap-2.5 text-sm leading-relaxed ${active ? 'text-t2' : 'text-t4'}`}>
-                          <RiCheckboxCircleLine size={16} className={`flex-shrink-0 mt-0.5 ${active ? 'text-em' : 'text-t4'}`} />
-                          {text}
-                        </li>
-                      )
-                    })}
+                    {allBullets.map((text, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-t2">
+                        <RiSparklingLine size={14} className="flex-shrink-0 mt-1 text-cyan" />
+                        {text}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}
 
-              {/* Optimized resume output */}
-              {optimizedText && (
+              {summary && (
                 <div className="card px-5 py-5 flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <RiCheckboxCircleLine size={16} className="text-em" />
-                      <span className="text-t1 font-semibold">Optimized Resume</span>
+                      <RiFileChartLine size={16} className="text-em" />
+                      <span className="text-t1 font-semibold">AI Summary</span>
                     </div>
                     <button
-                      onClick={() => downloadText(optimizedText, 'optimized_resume.txt')}
+                      onClick={() => downloadText(summary, 'optimized_resume.txt')}
                       className="flex items-center gap-2 bg-em text-bg text-xs font-bold uppercase tracking-wide px-4 py-2 rounded-lg hover:brightness-110 transition-all"
                     >
-                      <RiDownload2Line size={13} /> Download PDF
+                      <RiDownload2Line size={13} /> Download
                     </button>
                   </div>
 
-                  {/* Terminal-style preview */}
-                  <div className="bg-[#0A120D] border border-border rounded-xl overflow-hidden">
-                    <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red/60" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber/60" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-em/60" />
-                    </div>
-                    <pre className="px-5 py-4 text-xs text-t2 font-mono leading-relaxed overflow-auto max-h-72 whitespace-pre-wrap">
-                      {optimizedText}
-                    </pre>
+                  {/* ✅ Plain div, no <pre>, no font-mono */}
+                  <div className="px-5 py-4 text-sm text-t2 leading-relaxed overflow-auto max-h-72 whitespace-pre-wrap">
+                    {summary}
                   </div>
+                </div>
+              )}
+
+              {atsScore === null && missingKws.length === 0 && allBullets.length === 0 && strengths.length === 0 && !summary && (
+                <div className="card px-5 py-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <RiAlertLine size={16} className="text-amber" />
+                    <span className="text-t1 font-semibold">No analysis returned</span>
+                  </div>
+                  <pre className="text-xs text-t3 bg-[#0A120D] border border-border rounded-lg p-3 overflow-auto max-h-60">
+                    {JSON.stringify(result, null, 2)}
+                  </pre>
                 </div>
               )}
             </>
           ) : (
-            /* Placeholder state — shown before any result */
             <div className="flex flex-col gap-5">
               <div className="card px-5 py-5">
                 <div className="flex items-center gap-3 mb-3">
@@ -278,10 +328,10 @@ export default function Optimizer() {
                 </div>
                 <div className="flex items-center gap-5">
                   <div className="w-20 h-20 rounded-full border-4 border-border flex items-center justify-center text-t4 text-2xl font-bold opacity-30">
-                    —
+                    -
                   </div>
                   <p className="text-t4 text-sm leading-relaxed">
-                    Paste a job description and your resume, then click Optimize Now to see your ATS score, relevancy, and AI-generated improvements.
+                    Paste a job description and your resume, then click Optimize Now to see your ATS score, missing keywords, and AI suggestions.
                   </p>
                 </div>
               </div>
@@ -302,7 +352,7 @@ export default function Optimizer() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <RiCheckboxCircleLine size={16} className="text-em" />
-                    <span className="text-t1 font-semibold">Optimized Resume</span>
+                    <span className="text-t1 font-semibold">AI Summary</span>
                   </div>
                   <div className="bg-border text-transparent text-xs px-4 py-2 rounded-lg">Download</div>
                 </div>
