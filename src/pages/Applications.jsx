@@ -35,18 +35,18 @@ function scoreBar(score = 0) {
 // ── Stat card ────────────────────────────────────────────────
 function StatCard({ label, value, sub, accent = 'text-em' }) {
   return (
-    <div className="card px-5 py-5 flex flex-col gap-1 min-w-0">
+    <div className="card px-4 sm:px-5 py-4 sm:py-5 flex flex-col gap-1 min-w-0">
       <span className="label-xs">{label}</span>
       <div className="flex items-end gap-2 mt-1">
-        <span className={`text-3xl font-extrabold tracking-tight ${accent}`}>{value ?? '—'}</span>
-        {sub && <span className="text-t3 text-xs mb-1">{sub}</span>}
+        <span className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${accent}`}>{value ?? '—'}</span>
+        {sub && <span className="text-t3 text-xs mb-1 truncate">{sub}</span>}
       </div>
     </div>
   )
 }
 
-// ── Application row ──────────────────────────────────────────
-function AppRow({ app, onStatusChange, updating }) {
+// ── Application row (DESKTOP — table layout) ─────────────────
+function AppRowDesktop({ app, onStatusChange, updating }) {
   const [expanded, setExpanded] = useState(false)
   const { s, color } = scoreBar(app.match_score ?? app.ai_score ?? app.score)
   const st = statusStyle(app.status)
@@ -54,7 +54,7 @@ function AppRow({ app, onStatusChange, updating }) {
   return (
     <div className={`border-b border-border transition-colors ${expanded ? 'bg-surface2/30' : 'hover:bg-surface/50'}`}>
       {/* Main row */}
-      <div className="grid grid-cols-[1fr_140px_130px_160px_140px] items-center gap-4 px-4 py-4">
+      <div className="hidden lg:grid grid-cols-[1fr_140px_130px_160px_140px] items-center gap-4 px-4 py-4">
         {/* Company & Role */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-lg bg-surface3 border border-border flex items-center justify-center text-t2 font-bold text-sm flex-shrink-0">
@@ -98,7 +98,7 @@ function AppRow({ app, onStatusChange, updating }) {
             disabled={updating}
             className={`
               text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg
-              border outline-none cursor-pointer appearance-none
+              border outline-none cursor-pointer appearance-none w-full
               ${st.className}
               ${updating ? 'opacity-60 cursor-not-allowed' : ''}
             `}
@@ -112,20 +112,20 @@ function AppRow({ app, onStatusChange, updating }) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 justify-end">
           {app.status === 'interview' && (
-            <span className="text-xs text-cyan font-semibold border border-[#0E3347] bg-[#0C2233] px-2.5 py-1 rounded-lg">
+            <span className="text-xs text-cyan font-semibold border border-[#0E3347] bg-[#0C2233] px-2.5 py-1 rounded-lg whitespace-nowrap">
               Prep Interview
             </span>
           )}
           {app.status === 'offer' && (
-            <span className="text-xs text-em font-semibold">View Details</span>
+            <span className="text-xs text-em font-semibold whitespace-nowrap">View Details</span>
           )}
           {app.status === 'rejected' && (
-            <span className="text-xs text-t3 font-semibold">View Feedback</span>
+            <span className="text-xs text-t3 font-semibold whitespace-nowrap">View Feedback</span>
           )}
           {app.status === 'applied' && (
-            <span className="text-xs text-amber font-semibold border border-amber/30 bg-amber/10 px-2.5 py-1 rounded-lg">
+            <span className="text-xs text-amber font-semibold border border-amber/30 bg-amber/10 px-2.5 py-1 rounded-lg whitespace-nowrap">
               Follow Up
             </span>
           )}
@@ -140,9 +140,136 @@ function AppRow({ app, onStatusChange, updating }) {
         </div>
       </div>
 
-      {/* Expanded notes */}
+      {/* Expanded notes (desktop) */}
       {expanded && (
-        <div className="px-16 pb-4">
+        <div className="hidden lg:block px-16 pb-4">
+          <textarea
+            defaultValue={app.notes || ''}
+            placeholder="Add notes about this application…"
+            rows={2}
+            className="input-base text-xs resize-none"
+            onBlur={e => e.target.value !== (app.notes || '') && onStatusChange(app.id, app.status, e.target.value)}
+          />
+          {app.cover_letter && (
+            <a
+              href={`data:text/plain;charset=utf-8,${encodeURIComponent(app.cover_letter)}`}
+              download={`cover_letter_${(app.company || 'job').replace(/\s+/g, '_')}.txt`}
+              className="inline-flex items-center gap-1.5 text-em text-xs font-semibold mt-2 hover:underline"
+            >
+              <RiDownload2Line size={13} /> Download Cover Letter
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Application row (MOBILE — card layout) ───────────────────
+function AppRowMobile({ app, onStatusChange, updating }) {
+  const [expanded, setExpanded] = useState(false)
+  const { s, color } = scoreBar(app.match_score ?? app.ai_score ?? app.score)
+  const st = statusStyle(app.status)
+
+  return (
+    <div className={`lg:hidden border-b border-border transition-colors ${expanded ? 'bg-surface2/30' : ''}`}>
+      <div className="px-4 py-4">
+        {/* Top row: company avatar + name/role + expand */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-10 h-10 rounded-lg bg-surface3 border border-border flex items-center justify-center text-t2 font-bold text-sm flex-shrink-0">
+            {(app.company || '?').charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-t1 font-semibold text-[15px] truncate">{app.company || 'Unknown'}</div>
+            <div className="text-em text-xs truncate font-mono">{app.job_title || 'Unknown role'}</div>
+          </div>
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="text-t3 hover:text-t1 transition-colors p-1 flex-shrink-0"
+          >
+            {expanded ? <RiArrowUpSLine size={18} /> : <RiArrowDownSLine size={18} />}
+          </button>
+        </div>
+
+        {/* Meta grid: applied date + score */}
+        <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
+          <div>
+            <div className="text-t4 text-[11px] mb-0.5">Applied</div>
+            <div className="text-t1">
+              {app.applied_at
+                ? new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '—'}
+            </div>
+            {app.source && <div className="text-t4 text-[11px] mt-0.5">{app.source}</div>}
+          </div>
+          <div>
+            <div className="text-t4 text-[11px] mb-0.5">Match Score</div>
+            {s > 0 ? (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${s}%`, background: color }} />
+                </div>
+                <span className="text-xs font-bold" style={{ color }}>{s}%</span>
+              </div>
+            ) : (
+              <span className="text-t4 text-xs">No score</span>
+            )}
+          </div>
+        </div>
+
+        {/* Status + actions */}
+        <div className="flex items-center gap-2 mb-2">
+          <select
+            value={app.status || 'pending'}
+            onChange={e => onStatusChange(app.id, e.target.value)}
+            disabled={updating}
+            className={`
+              flex-1 text-[11px] font-bold uppercase tracking-wide px-3 py-2 rounded-lg
+              border outline-none cursor-pointer appearance-none text-center
+              ${st.className}
+              ${updating ? 'opacity-60 cursor-not-allowed' : ''}
+            `}
+          >
+            {['pending','applied','interview','offer','rejected'].map(s => (
+              <option key={s} value={s} className="bg-surface text-t1 uppercase">
+                {statusStyle(s).label}
+              </option>
+            ))}
+          </select>
+          {app.job_url && (
+            <a
+              href={app.job_url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center w-10 h-10 rounded-lg border border-border text-t3 hover:border-border2 hover:text-em transition-all flex-shrink-0"
+            >
+              <RiExternalLinkLine size={15} />
+            </a>
+          )}
+        </div>
+
+        {/* Status-specific action */}
+        {(app.status === 'interview' || app.status === 'offer' || app.status === 'rejected' || app.status === 'applied') && (
+          <div className="text-center py-2 border-t border-border -mx-4 px-4 mt-2">
+            {app.status === 'interview' && (
+              <span className="text-xs text-cyan font-semibold">📋 Prep Interview</span>
+            )}
+            {app.status === 'offer' && (
+              <span className="text-xs text-em font-semibold">🎉 View Details</span>
+            )}
+            {app.status === 'rejected' && (
+              <span className="text-xs text-t3 font-semibold">View Feedback</span>
+            )}
+            {app.status === 'applied' && (
+              <span className="text-xs text-amber font-semibold">⏰ Follow Up</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Expanded notes (mobile) */}
+      {expanded && (
+        <div className="px-4 pb-4">
           <textarea
             defaultValue={app.notes || ''}
             placeholder="Add notes about this application…"
@@ -182,7 +309,7 @@ function NewEntryModal({ onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-surface border border-border rounded-2xl w-full max-w-md p-6 animate-in shadow-lg">
+      <div className="bg-surface border border-border rounded-2xl w-full max-w-md p-5 sm:p-6 animate-in shadow-lg max-h-[90vh] overflow-y-auto">
         <h2 className="text-t1 font-bold text-lg mb-5">+ New Application</h2>
         <div className="flex flex-col gap-3">
           <input className="input-base" placeholder="Job title *" value={form.job_title} onChange={e => set('job_title')(e.target.value)} />
@@ -196,7 +323,7 @@ function NewEntryModal({ onClose, onSave }) {
           <textarea className="input-base resize-none" rows={2} placeholder="Notes (optional)" value={form.notes} onChange={e => set('notes')(e.target.value)} />
           {err && <p className="text-red text-xs">{err}</p>}
         </div>
-        <div className="flex gap-3 mt-5">
+        <div className="flex flex-col sm:flex-row gap-3 mt-5">
           <button onClick={onClose} className="btn-outline flex-1">Cancel</button>
           <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
             {saving ? <RiLoader4Line size={14} className="animate-spin" /> : 'Save'}
@@ -311,31 +438,31 @@ export default function Applications() {
 
   return (
     <div className="animate-in">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-7">
-        <div>
-          <h1 className="text-3xl font-extrabold text-t1 tracking-tight flex items-center gap-3">
-            <RiBarChartBoxLine size={26} className="text-t3" /> Application Tracker
+      {/* Header — stacks on mobile */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-7">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-t1 tracking-tight flex items-center gap-3">
+            <RiBarChartBoxLine size={26} className="text-t3 flex-shrink-0" /> Application Tracker
           </h1>
           <p className="text-t3 text-sm mt-1.5">
             Real-time surveillance of your active career trajectory and AI-assisted pipelines.
           </p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={exportCSV} className="btn-outline !w-auto px-4 gap-2">
-            <RiDownload2Line size={14} /> Export CSV
+        <div className="flex gap-2 sm:gap-3 self-end sm:self-auto">
+          <button onClick={exportCSV} className="btn-outline !w-auto px-3 sm:px-4 gap-2 text-sm">
+            <RiDownload2Line size={14} /> <span className="hidden sm:inline">Export CSV</span>
           </button>
-          <button onClick={() => setShowModal(true)} className="btn-primary !w-auto px-4 gap-2">
-            <RiAddLine size={15} /> New Entry
+          <button onClick={() => setShowModal(true)} className="btn-primary !w-auto px-3 sm:px-4 gap-2 text-sm">
+            <RiAddLine size={15} /> <span className="hidden sm:inline">New Entry</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-5 py-3 mb-5">{error}</div>
+        <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-xl px-4 sm:px-5 py-3 mb-5">{error}</div>
       )}
 
-      {/* Stats row — all from real data */}
+      {/* Stats row — responsive grid: 2 cols mobile, 3 cols tablet, 5 cols desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         <StatCard label="Total Active"  value={total}     sub={total === 1 ? '1 tracked' : `${total} tracked`}  />
         <StatCard label="Interviews"    value={interviews} sub={`${interviews} active`}  accent="text-cyan" />
@@ -351,18 +478,19 @@ export default function Applications() {
 
       {/* Table card */}
       <div className="card overflow-hidden mb-6">
-        {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-border">
+        {/* Toolbar — stacks on mobile */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 px-4 sm:px-5 py-4 border-b border-border">
           {/* Status filter */}
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <button
               onClick={() => { setFilterOpen(o => !o); setSortOpen(false) }}
-              className="flex items-center gap-2 bg-surface2 border border-border text-t1 text-sm font-mono px-4 py-2.5 rounded-lg hover:border-border2 transition-all"
+              className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2 bg-surface2 border border-border text-t1 text-sm font-mono px-4 py-2.5 rounded-lg hover:border-border2 transition-all"
             >
-              Status: {statusFilter} <RiArrowDownSLine size={14} className="text-t3" />
+              <span className="truncate">Status: {statusFilter}</span>
+              <RiArrowDownSLine size={14} className="text-t3 flex-shrink-0" />
             </button>
             {filterOpen && (
-              <div className="absolute top-full mt-1 left-0 w-52 bg-surface3 border border-border2 rounded-lg shadow-lg py-1 z-20">
+              <div className="absolute top-full mt-1 left-0 w-full sm:w-52 bg-surface3 border border-border2 rounded-lg shadow-lg py-1 z-20">
                 {STATUS_OPTIONS.map(s => (
                   <button
                     key={s}
@@ -377,15 +505,16 @@ export default function Applications() {
           </div>
 
           {/* Sort */}
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <button
               onClick={() => { setSortOpen(o => !o); setFilterOpen(false) }}
-              className="flex items-center gap-2 bg-surface2 border border-border text-t1 text-sm font-mono px-4 py-2.5 rounded-lg hover:border-border2 transition-all"
+              className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2 bg-surface2 border border-border text-t1 text-sm font-mono px-4 py-2.5 rounded-lg hover:border-border2 transition-all"
             >
-              Sort: {sortOption} <RiArrowDownSLine size={14} className="text-t3" />
+              <span className="truncate">Sort: {sortOption}</span>
+              <RiArrowDownSLine size={14} className="text-t3 flex-shrink-0" />
             </button>
             {sortOpen && (
-              <div className="absolute top-full mt-1 left-0 w-44 bg-surface3 border border-border2 rounded-lg shadow-lg py-1 z-20">
+              <div className="absolute top-full mt-1 left-0 w-full sm:w-44 bg-surface3 border border-border2 rounded-lg shadow-lg py-1 z-20">
                 {SORT_OPTIONS.map(s => (
                   <button
                     key={s}
@@ -400,19 +529,19 @@ export default function Applications() {
           </div>
 
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 w-full sm:min-w-[200px]">
             <RiSearchLine size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-t3" />
             <input
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
               placeholder="Search applications..."
-              className="input-base pl-9 py-2.5 text-sm"
+              className="input-base pl-9 py-2.5 text-sm w-full"
             />
           </div>
         </div>
 
-        {/* Column headers */}
-        <div className="grid grid-cols-[1fr_140px_130px_160px_140px] gap-4 px-4 py-2.5 border-b border-border">
+        {/* Desktop column headers (hidden on mobile) */}
+        <div className="hidden lg:grid grid-cols-[1fr_140px_130px_160px_140px] gap-4 px-4 py-2.5 border-b border-border">
           {['Company & Role', 'Applied Date', 'AI Match Score', 'Current Status', 'Actions'].map(h => (
             <span key={h} className="label-xs">{h}</span>
           ))}
@@ -425,29 +554,37 @@ export default function Applications() {
             <span className="text-t3 text-sm">Loading applications…</span>
           </div>
         ) : paginated.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-2 px-4">
             <RiBarChartBoxLine size={28} className="text-t4 mb-1" />
             <p className="text-t2 text-sm font-medium">No applications found</p>
             <p className="text-t4 text-xs">Track a job from the Job Search page, or add one manually.</p>
           </div>
         ) : (
           paginated.map(app => (
-            <AppRow
-              key={app.id}
-              app={app}
-              onStatusChange={handleStatusChange}
-              updating={updatingId === app.id}
-            />
+            <div key={app.id}>
+              {/* Mobile card (shown on < lg) */}
+              <AppRowMobile
+                app={app}
+                onStatusChange={handleStatusChange}
+                updating={updatingId === app.id}
+              />
+              {/* Desktop row (shown on lg+) */}
+              <AppRowDesktop
+                app={app}
+                onStatusChange={handleStatusChange}
+                updating={updatingId === app.id}
+              />
+            </div>
           ))
         )}
 
-        {/* Pagination */}
+        {/* Pagination — stacks on mobile */}
         {filtered.length > 0 && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-border">
-            <span className="text-t3 text-sm">
-              Showing {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} applications
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-4 border-t border-border">
+            <span className="text-t3 text-sm text-center sm:text-left">
+              Showing {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-center">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
@@ -481,9 +618,9 @@ export default function Applications() {
       </div>
 
       {/* Bottom widgets row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Weekly AI Forecast — derived from real data, not fabricated */}
-        <div className="card px-5 py-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+        {/* Pipeline Summary */}
+        <div className="card px-4 sm:px-5 py-5">
           <h3 className="text-t1 font-semibold flex items-center gap-2 mb-4">
             📈 Pipeline Summary
           </h3>
@@ -506,8 +643,8 @@ export default function Applications() {
           </div>
         </div>
 
-        {/* Upcoming — only shown if interviews/offers exist */}
-        <div className="card px-5 py-5">
+        {/* Active Pipeline */}
+        <div className="card px-4 sm:px-5 py-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-t1 font-semibold flex items-center gap-2">
               <RiCalendarLine size={16} className="text-cyan" /> Active Pipeline
