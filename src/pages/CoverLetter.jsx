@@ -356,11 +356,11 @@ export default function CoverLetter() {
       </div>
 
       {/* ── Two-column layout ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8">
+      {/* ✅ FIX: h-[calc(100vh-...] makes columns same height, then we scroll only the right side */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 xl:items-start">
 
-        {/* ════ Left — Generator ════ */}
-        <div className="flex flex-col gap-6">
-
+        {/* ════ Left — Generator (scrolls naturally with page) ════ */}
+        <div className="flex flex-col gap-6 min-w-0">
           {/* No-resume banner */}
           {!hasResume && (
             <div className="flex items-center justify-between gap-4 flex-wrap bg-[#3D2400] border border-amber rounded-xl px-5 py-4">
@@ -542,50 +542,53 @@ export default function CoverLetter() {
           )}
         </div>
 
-        {/* ════ Right — Saved letters ════ */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <RiFileTextLine size={14} className="text-t3" />
-              <span className="label-xs">Saved Letters</span>
+        {/* ════ Right — Saved letters (✅ INDEPENDENT SCROLL) ════ */}
+        {/* ✅ Sticky + max-height + overflow-y-auto = right column scrolls, page doesn't */}
+        <div className="xl:sticky xl:top-6 xl:self-start">
+          <div className="flex flex-col gap-4 max-h-[calc(100vh-7rem)] overflow-y-auto pr-1 saved-letters-scroll">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <RiFileTextLine size={14} className="text-t3" />
+                <span className="label-xs">Saved Letters</span>
+              </div>
+              <button
+                onClick={fetchSaved}
+                disabled={savedLoading}
+                className="text-t4 hover:text-t2 transition-colors"
+                title="Refresh"
+              >
+                <RiRefreshLine size={14} className={savedLoading ? 'animate-spin' : ''} />
+              </button>
             </div>
-            <button
-              onClick={fetchSaved}
-              disabled={savedLoading}
-              className="text-t4 hover:text-t2 transition-colors"
-              title="Refresh"
-            >
-              <RiRefreshLine size={14} className={savedLoading ? 'animate-spin' : ''} />
-            </button>
+
+            {savedLoading && (
+              <div className="flex items-center justify-center py-10">
+                <RiLoader4Line size={20} className="text-em animate-spin" />
+              </div>
+            )}
+
+            {!savedLoading && saved.length === 0 && (
+              <div className="empty-state !p-8">
+                <RiBriefcaseLine size={28} className="text-t4 mx-auto mb-3" />
+                <p className="text-t3 text-sm font-medium">No saved letters yet</p>
+                <p className="text-t4 text-xs mt-1">Generated letters appear here automatically.</p>
+              </div>
+            )}
+
+            {!savedLoading && saved.length > 0 && (
+              <div className="flex flex-col gap-3">
+                {saved.map(letter => (
+                  <SavedCard
+                    key={letter.id ?? letter}
+                    letter={typeof letter === 'object' ? letter : { id: letter }}
+                    onView={setViewLetter}
+                    onDelete={handleDelete}
+                    deleting={deletingId === (letter.id ?? letter)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-
-          {savedLoading && (
-            <div className="flex items-center justify-center py-10">
-              <RiLoader4Line size={20} className="text-em animate-spin" />
-            </div>
-          )}
-
-          {!savedLoading && saved.length === 0 && (
-            <div className="empty-state !p-8">
-              <RiBriefcaseLine size={28} className="text-t4 mx-auto mb-3" />
-              <p className="text-t3 text-sm font-medium">No saved letters yet</p>
-              <p className="text-t4 text-xs mt-1">Generated letters appear here automatically.</p>
-            </div>
-          )}
-
-          {!savedLoading && saved.length > 0 && (
-            <div className="flex flex-col gap-3">
-              {saved.map(letter => (
-                <SavedCard
-                  key={letter.id ?? letter}
-                  letter={typeof letter === 'object' ? letter : { id: letter }}
-                  onView={setViewLetter}
-                  onDelete={handleDelete}
-                  deleting={deletingId === (letter.id ?? letter)}
-                />
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
