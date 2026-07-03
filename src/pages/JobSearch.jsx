@@ -9,7 +9,6 @@ import { useResume } from './context/ResumeContext'
 import { jobsApi } from './api/jobs'
 import { coverLetterApi } from './api/coverLetter'
 import { errMessage } from './utils/errors'
-import JobFilters from '../components/jobs/JobFilters'
 import JobCard from '../components/jobs/JobCard'
 
 const SORT_OPTIONS = [
@@ -46,21 +45,9 @@ export default function JobSearch() {
   const [trackedMsg, setTrackedMsg]   = useState('')
   const [letterMsg, setLetterMsg]     = useState('')
 
-  const [filters, setFilters] = useState({
-    activeTags:    [],
-    roleTypes:     [],
-    salaryMin:     0,
-    salaryMax:     300000,
-    salaryFloor:   0,
-    remoteOnly:    false,
-  })
-  const [filtering, setFiltering] = useState(false)
   const [wantCoverLetters, setWantCoverLetters] = useState(false)
 
   // Real elapsed-time tracking — this pipeline genuinely takes 1-6+ minutes
-  // (confirmed from backend logs: each keyword combo runs job-board fetches +
-  // semantic search + Mistral ranking sequentially, ~45-55s per combo), so a
-  // fake progress bar would be misleading. We show actual seconds elapsed instead.
   const [elapsedSec, setElapsedSec] = useState(0)
   const timerRef = useRef(null)
 
@@ -81,7 +68,7 @@ export default function JobSearch() {
     return m > 0 ? `${m}m ${s}s` : `${s}s`
   }
 
-  // POST /jobs/search — generic search, location only, no resume tie-in at all
+  // POST /jobs/search — generic search, location only, no resume tie-in
   const runGeneralSearch = async () => {
     if (!location.trim()) {
       setSearchError('Enter a location to search.')
@@ -101,9 +88,7 @@ export default function JobSearch() {
     }
   }
 
-  // POST /jobs/search-by-resume — extracts skills from a specific resume,
-  // builds keyword combinations, scores jobs against resume skills, sorts
-  // by match score, filters by min_match_score.
+  // POST /jobs/search-by-resume — extracts skills from a specific resume
   const runResumeSearch = async () => {
     if (!location.trim()) {
       setSearchError('Enter a location to search.')
@@ -130,27 +115,6 @@ export default function JobSearch() {
       setJobs([])
     } finally {
       setSearching(false)
-    }
-  }
-
-  // POST /jobs/filter — real server-side filtering against the rich contract
-  const applyServerFilters = async () => {
-    if (!jobs || jobs.length === 0) return
-    setFiltering(true)
-    setSearchError('')
-    try {
-      const res = await jobsApi.filterJobs({
-        jobs,
-        remoteOnly:       filters.remoteOnly || undefined,
-        minSalary:        filters.salaryFloor || undefined,
-        experienceLevel:  filters.roleTypes.length ? filters.roleTypes.join(',') : undefined,
-      })
-      const filtered = Array.isArray(res) ? res : (res?.jobs || [])
-      setJobs(filtered)
-    } catch (err) {
-      setSearchError(errMessage(err, 'Filtering failed.'))
-    } finally {
-      setFiltering(false)
     }
   }
 
@@ -186,7 +150,6 @@ export default function JobSearch() {
         location: job.location || '',
         tone: 'professional',
       })
-      // Use the professional variant body inline on the card
       const professionalVariant = res?.variants?.find(v => v.tone === 'professional') || res?.variants?.[0]
       if (professionalVariant?.body) {
         setJobs(prev => prev.map((j, i) => i === idx ? { ...j, cover_letter: professionalVariant.body, cover_letter_id: res.id } : j))
@@ -204,7 +167,7 @@ export default function JobSearch() {
     navigate('/interview', { state: { jobTitle: job.title, company: job.company } })
   }
 
-  // Client-side sort only — actual filtering now goes through the real /jobs/filter endpoint
+  // Client-side sort only
   const visibleJobs = useMemo(() => {
     if (!jobs) return []
     return [...jobs].sort((a, b) => {
@@ -244,7 +207,7 @@ export default function JobSearch() {
         </div>
       </div>
 
-      {/* No resume banner — real state from ResumeContext */}
+      {/* No resume banner */}
       {!hasResume && (
         <div className="
           flex items-center justify-between gap-4 flex-wrap
@@ -276,13 +239,13 @@ export default function JobSearch() {
 
       {trackedMsg && (
         <div className="bg-[#052E1C] border border-em text-em text-sm rounded-xl px-5 py-3 mb-6">
-          ✅ {trackedMsg}
+          [tracked] {trackedMsg}
         </div>
       )}
 
       {letterMsg && (
         <div className="bg-[#052E1C] border border-em text-em text-sm rounded-xl px-5 py-3 mb-6 flex items-center justify-between gap-4">
-          <span>✉️ {letterMsg}</span>
+          <span>[letter] {letterMsg}</span>
           <button
             onClick={() => navigate('/cover-letter')}
             className="text-em font-bold text-xs border border-em rounded-lg px-3 py-1.5 hover:bg-em hover:text-bg transition-all flex-shrink-0"
@@ -292,207 +255,195 @@ export default function JobSearch() {
         </div>
       )}
 
-      {/* Layout: filters sidebar + results */}
-      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
-        {/* Filters — applies via real /jobs/filter call */}
-        <JobFilters
-          filters={filters}
-          setFilters={setFilters}
-          trainingProgress={null /* no API field for this — omitted rather than faked */}
-          onApply={applyServerFilters}
-          applying={filtering}
-          hasResults={Boolean(jobs && jobs.length > 0)}
-        />
-
-        {/* Results column */}
-        <div className="flex flex-col gap-5 min-w-0">
-          {/* Mode 1 — General location search: POST /jobs/search, no resume involved */}
-          <div className="card px-5 py-4">
-            <div className="flex items-center gap-1.5 mb-2.5">
-              <RiMapPin2Line size={13} className="text-cyan" />
-              <span className="label-xs text-cyan">General Search</span>
-              <span className="text-t4 text-[11px]">— searches all open roles in a location</span>
-            </div>
-            <div className="flex gap-2.5">
-              <input
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && runGeneralSearch()}
-                placeholder="City, country, or 'Remote'…"
-                className="input-base py-3"
-              />
-              <button
-                onClick={runGeneralSearch}
-                disabled={searching}
-                className="btn-outline !w-auto px-5 whitespace-nowrap text-cyan border-[#0E3347] hover:border-cyan"
-              >
-                {searching && searchMode !== 'resume'
-                  ? <RiLoader4Line size={15} className="animate-spin" />
-                  : <RiSearch2Line size={15} />}
-                Search
-              </button>
-            </div>
+      {/* Results column — no sidebar, full width */}
+      <div className="flex flex-col gap-5 min-w-0">
+        {/* Mode 1 — General location search */}
+        <div className="card px-5 py-4">
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <RiMapPin2Line size={13} className="text-cyan" />
+            <span className="label-xs text-cyan">General Search</span>
+            <span className="text-t4 text-[11px]">— searches all open roles in a location</span>
           </div>
-
-          {/* Mode 2 — Resume-matched search: POST /jobs/search-by-resume */}
-          <div className="card px-5 py-4">
-            <div className="flex items-center gap-1.5 mb-2.5">
-              <RiUserStarLine size={13} className="text-em" />
-              <span className="label-xs text-em">Resume Match Search</span>
-              <span className="text-t4 text-[11px]">— extracts skills from your CV and scores results against them</span>
-            </div>
-            <div className="flex gap-2.5">
-              <input
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && runResumeSearch()}
-                placeholder="City, country, or 'Remote'…"
-                className="input-base py-3"
-                disabled={!hasResume}
-              />
-              <button
-                onClick={runResumeSearch}
-                disabled={searching || !hasResume}
-                className="btn-primary !w-auto px-5 whitespace-nowrap disabled:opacity-50"
-              >
-                {searching && searchMode === 'resume'
-                  ? <RiLoader4Line size={15} className="animate-spin" />
-                  : <RiUserStarLine size={15} />}
-                Match My Resume
-              </button>
-            </div>
-            {!hasResume && (
-              <p className="text-t4 text-xs mt-2">Upload a resume to unlock this mode.</p>
-            )}
-          </div>
-
-          {/* Shared option — generating cover letters happens inline during
-              search on the backend, so this must be set before the search runs.
-              There is no working per-job cover-letter endpoint to fall back on. */}
-          <label className="flex items-center gap-2.5 cursor-pointer select-none px-1">
+          <div className="flex gap-2.5">
             <input
-              type="checkbox"
-              checked={wantCoverLetters}
-              onChange={e => setWantCoverLetters(e.target.checked)}
-              className="sr-only peer"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && runGeneralSearch()}
+              placeholder="City, country, or 'Remote'…"
+              className="input-base py-3"
             />
-            <span className="
-              w-[18px] h-[18px] rounded-md border border-border2 flex items-center justify-center
-              peer-checked:bg-em peer-checked:border-em transition-all flex-shrink-0
-            ">
-              {wantCoverLetters && (
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8l3.5 3.5L13 5" stroke="#07090A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </span>
-            <span className="text-t2 text-sm">Generate cover letters</span>
-            <span className="text-t4 text-xs">— adds time to the search, generated per result</span>
-          </label>
+            <button
+              onClick={runGeneralSearch}
+              disabled={searching}
+              className="btn-outline !w-auto px-5 whitespace-nowrap text-cyan border-[#0E3347] hover:border-cyan"
+            >
+              {searching && searchMode !== 'resume'
+                ? <RiLoader4Line size={15} className="animate-spin" />
+                : <RiSearch2Line size={15} />}
+              Search
+            </button>
+          </div>
+        </div>
 
-          {/* Results count + sort */}
-          {jobs !== null && (
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <span className="text-t3 text-sm">
-                Found <span className="text-t1 font-bold">{visibleJobs.length}</span> relevant opportunities
-                {searchMode && (
-                  <span className="text-t4"> &middot; via {searchMode === 'resume' ? 'resume match' : 'general search'}</span>
-                )}
-              </span>
-
-              <div className="relative">
-                <button
-                  onClick={() => setSortOpen(o => !o)}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <span className="text-t4">Sort by:</span>
-                  <span className="text-em font-semibold">
-                    {SORT_OPTIONS.find(o => o.value === sortBy)?.label}
-                  </span>
-                  <RiArrowDownSLine size={15} className="text-t3" />
-                </button>
-
-                {sortOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-surface3 border border-border2 rounded-lg shadow-lg z-20 py-1.5">
-                    {SORT_OPTIONS.map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => { setSortBy(opt.value); setSortOpen(false) }}
-                        className={`
-                          w-full text-left px-3.5 py-2 text-sm transition-colors
-                          ${sortBy === opt.value ? 'text-em font-semibold' : 'text-t2 hover:bg-surface2'}
-                        `}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Job grid / states */}
-          {searching && (
-            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-              <RiLoader4Line size={28} className="text-em animate-spin" />
-              <div>
-                <p className="text-t2 text-sm font-medium">
-                  {searchMode === 'resume'
-                    ? 'Extracting skills, querying job boards, and ranking with AI…'
-                    : 'Searching job boards and ranking with AI…'}
-                </p>
-                <p className="text-t4 text-xs mt-1.5">
-                  This can take a few minutes — multiple job boards and AI ranking run per search.
-                </p>
-              </div>
-              <div className="bg-surface2 border border-border rounded-lg px-4 py-2">
-                <span className="text-em font-mono text-sm font-semibold">{formatElapsed(elapsedSec)}</span>
-                <span className="text-t4 text-xs ml-2">elapsed</span>
-              </div>
-              {elapsedSec > 90 && (
-                <p className="text-t4 text-xs max-w-sm">
-                  Still working — the AI is running multiple keyword combinations through job boards and ranking each result. This is normal for thorough searches.
-                </p>
-              )}
-            </div>
-          )}
-
-          {!searching && jobs === null && (
-            <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
-              <RiSearch2Line size={32} className="text-t4 mb-2" />
-              <p className="text-t2 text-sm font-medium">Run a general or resume-matched search above</p>
-              <p className="text-t4 text-xs">Results will appear here once the AI finishes ranking.</p>
-            </div>
-          )}
-
-          {!searching && jobs !== null && visibleJobs.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
-              <p className="text-t2 text-sm font-medium">No jobs matched this search</p>
-              <p className="text-t4 text-xs max-w-sm">
-                {searchMode === 'resume'
-                  ? 'The AI ranked all results below the minimum match threshold, or job boards returned no listings for this location. Try a broader location or re-run the search.'
-                  : 'Try a different location, or switch to Resume Match Search for AI-ranked results.'}
-              </p>
-            </div>
-          )}
-
-          {!searching && visibleJobs.length > 0 && (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-              {visibleJobs.map((job, idx) => (
-                <JobCard
-                  key={`${job.title}-${job.company}-${idx}`}
-                  job={job}
-                  tracking={trackingIdx === idx}
-                  generatingLetter={letterIdx === idx}
-                  onTrack={(j) => handleTrack(j, idx)}
-                  onGenerateCoverLetter={(j) => handleGenerateCoverLetter(j, idx)}
-                  onInterviewPrep={handleInterviewPrep}
-                />
-              ))}
-            </div>
+        {/* Mode 2 — Resume-matched search */}
+        <div className="card px-5 py-4">
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <RiUserStarLine size={13} className="text-em" />
+            <span className="label-xs text-em">Resume Match Search</span>
+            <span className="text-t4 text-[11px]">— extracts skills from your CV and scores results against them</span>
+          </div>
+          <div className="flex gap-2.5">
+            <input
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && runResumeSearch()}
+              placeholder="City, country, or 'Remote'…"
+              className="input-base py-3"
+              disabled={!hasResume}
+            />
+            <button
+              onClick={runResumeSearch}
+              disabled={searching || !hasResume}
+              className="btn-primary !w-auto px-5 whitespace-nowrap disabled:opacity-50"
+            >
+              {searching && searchMode === 'resume'
+                ? <RiLoader4Line size={15} className="animate-spin" />
+                : <RiUserStarLine size={15} />}
+              Match My Resume
+            </button>
+          </div>
+          {!hasResume && (
+            <p className="text-t4 text-xs mt-2">Upload a resume to unlock this mode.</p>
           )}
         </div>
+
+        {/* Cover letters toggle */}
+        <label className="flex items-center gap-2.5 cursor-pointer select-none px-1">
+          <input
+            type="checkbox"
+            checked={wantCoverLetters}
+            onChange={e => setWantCoverLetters(e.target.checked)}
+            className="sr-only peer"
+          />
+          <span className="
+            w-[18px] h-[18px] rounded-md border border-border2 flex items-center justify-center
+            peer-checked:bg-em peer-checked:border-em transition-all flex-shrink-0
+          ">
+            {wantCoverLetters && (
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8l3.5 3.5L13 5" stroke="#07090A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </span>
+          <span className="text-t2 text-sm">Generate cover letters</span>
+          <span className="text-t4 text-xs">— adds time to the search, generated per result</span>
+        </label>
+
+        {/* Results count + sort */}
+        {jobs !== null && (
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <span className="text-t3 text-sm">
+              Found <span className="text-t1 font-bold">{visibleJobs.length}</span> relevant opportunities
+              {searchMode && (
+                <span className="text-t4"> &middot; via {searchMode === 'resume' ? 'resume match' : 'general search'}</span>
+              )}
+            </span>
+
+            <div className="relative">
+              <button
+                onClick={() => setSortOpen(o => !o)}
+                className="flex items-center gap-2 text-sm"
+              >
+                <span className="text-t4">Sort by:</span>
+                <span className="text-em font-semibold">
+                  {SORT_OPTIONS.find(o => o.value === sortBy)?.label}
+                </span>
+                <RiArrowDownSLine size={15} className="text-t3" />
+              </button>
+
+              {sortOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-surface3 border border-border2 rounded-lg shadow-lg z-20 py-1.5">
+                  {SORT_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setSortBy(opt.value); setSortOpen(false) }}
+                      className={`
+                        w-full text-left px-3.5 py-2 text-sm transition-colors
+                        ${sortBy === opt.value ? 'text-em font-semibold' : 'text-t2 hover:bg-surface2'}
+                      `}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Searching state */}
+        {searching && (
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+            <RiLoader4Line size={28} className="text-em animate-spin" />
+            <div>
+              <p className="text-t2 text-sm font-medium">
+                {searchMode === 'resume'
+                  ? 'Extracting skills, querying job boards, and ranking with AI…'
+                  : 'Searching job boards and ranking with AI…'}
+              </p>
+              <p className="text-t4 text-xs mt-1.5">
+                This can take a few minutes — multiple job boards and AI ranking run per search.
+              </p>
+            </div>
+            <div className="bg-surface2 border border-border rounded-lg px-4 py-2">
+              <span className="text-em font-mono text-sm font-semibold">{formatElapsed(elapsedSec)}</span>
+              <span className="text-t4 text-xs ml-2">elapsed</span>
+            </div>
+            {elapsedSec > 90 && (
+              <p className="text-t4 text-xs max-w-sm">
+                Still working — the AI is running multiple keyword combinations through job boards and ranking each result. This is normal for thorough searches.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!searching && jobs === null && (
+          <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
+            <RiSearch2Line size={32} className="text-t4 mb-2" />
+            <p className="text-t2 text-sm font-medium">Run a general or resume-matched search above</p>
+            <p className="text-t4 text-xs">Results will appear here once the AI finishes ranking.</p>
+          </div>
+        )}
+
+        {/* No results */}
+        {!searching && jobs !== null && visibleJobs.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
+            <p className="text-t2 text-sm font-medium">No jobs matched this search</p>
+            <p className="text-t4 text-xs max-w-sm">
+              {searchMode === 'resume'
+                ? 'The AI ranked all results below the minimum match threshold, or job boards returned no listings for this location. Try a broader location or re-run the search.'
+                : 'Try a different location, or switch to Resume Match Search for AI-ranked results.'}
+            </p>
+          </div>
+        )}
+
+        {/* Results grid */}
+        {!searching && visibleJobs.length > 0 && (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            {visibleJobs.map((job, idx) => (
+              <JobCard
+                key={`${job.title}-${job.company}-${idx}`}
+                job={job}
+                tracking={trackingIdx === idx}
+                generatingLetter={letterIdx === idx}
+                onTrack={(j) => handleTrack(j, idx)}
+                onGenerateCoverLetter={(j) => handleGenerateCoverLetter(j, idx)}
+                onInterviewPrep={handleInterviewPrep}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
