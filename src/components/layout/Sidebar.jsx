@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   RiDashboardLine, RiFileTextLine, RiSearchLine, RiSparklingLine,
   RiMagicLine, RiBriefcaseLine, RiMicLine, RiClipboardLine,
-  RiHistoryLine, RiLineChartLine, RiCloudLine, RiMailLine,
+  RiHistoryLine, RiCloudLine, RiMailLine,
   RiLogoutBoxRLine, RiMenuLine, RiCloseLine, RiVipCrownLine,
+  RiArrowRightUpLine,
 } from 'react-icons/ri'
 import { useAuth } from '../../pages/context/AuthContext'
 import NavItem from './NavItem'
@@ -55,9 +56,52 @@ function Brand() {
   )
 }
 
+// ✅ NEW: Admin Panel button card
+function AdminPanelButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="
+        mt-3 w-full flex items-center gap-3 rounded-xl px-4 py-3.5
+        bg-[#052E1C] border border-[#0E4A2E]
+        hover:bg-[#0E4A2E] hover:border-em
+        transition-all duration-150
+        group
+      "
+    >
+      <div className="
+        w-9 h-9 rounded-lg bg-em/20 border border-em/40
+        flex items-center justify-center flex-shrink-0
+        group-hover:bg-em/30 transition-colors
+      ">
+        <RiVipCrownLine size={18} className="text-em" />
+      </div>
+      <div className="flex-1 text-left">
+        <div className="text-em font-bold text-sm leading-tight">
+          Admin Panel
+        </div>
+        <div className="text-t2 text-[11px] tracking-wide mt-0.5">
+          Elevated access
+        </div>
+      </div>
+      <RiArrowRightUpLine
+        size={16}
+        className="text-em flex-shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+      />
+    </button>
+  )
+}
+
 function SidebarContent({ onNavClick }) {
   const { logout, isAdmin } = useAuth()
   const online = useApiHealth()
+  const navigate = useNavigate()
+
+  // ✅ NEW: handles admin panel click
+  const handleAdminClick = () => {
+    navigate('/admin')
+    onNavClick?.()   // closes mobile drawer if open
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -75,14 +119,7 @@ function SidebarContent({ onNavClick }) {
 
       {/* Footer block */}
       <div className="px-3 pb-5 pt-3 flex flex-col gap-0.5">
-        <Link
-          to="/admin/stats"
-          onClick={onNavClick}
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold tracking-wide text-t3 hover:text-t1 hover:bg-surface2 transition-all uppercase"
-        >
-          <RiLineChartLine size={15} />
-          System Stats
-        </Link>
+        {/* API Status */}
         <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold tracking-wide text-t3 uppercase">
           {online === null ? (
             <RiCloudLine size={15} className="animate-pulse" />
@@ -94,6 +131,7 @@ function SidebarContent({ onNavClick }) {
           API Status
           <span className={`ml-auto w-1.5 h-1.5 rounded-full ${online ? 'bg-em' : online === false ? 'bg-red' : 'bg-t4 animate-pulse'}`} />
         </div>
+
         <button
           onClick={logout}
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold tracking-wide text-amber hover:bg-surface2 transition-all uppercase text-left"
@@ -102,23 +140,11 @@ function SidebarContent({ onNavClick }) {
           Logout
         </button>
 
-        {/* Admin panel highlight card */}
+        {/* ✅ Admin Panel button (only for admins) */}
         {isAdmin() && (
-          <Link
-            to="/admin"
-            onClick={onNavClick}
-            className="
-              mt-3 flex flex-col gap-0.5 rounded-xl px-4 py-3.5
-              bg-[#052E1C] border border-[#0E4A2E]
-              hover:border-em transition-all duration-150
-            "
-          >
-            <span className="flex items-center gap-2 text-em font-bold text-sm">
-              <RiVipCrownLine size={16} />
-              Admin Panel
-            </span>
-            <span className="text-t2 text-[11px] tracking-wide">Elevated access</span>
-          </Link>
+          <div className="px-0">
+            <AdminPanelButton onClick={handleAdminClick} />
+          </div>
         )}
       </div>
     </div>
@@ -130,7 +156,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* ── Desktop sidebar ── */}
+      {/* Desktop sidebar */}
       <aside className="
         hidden md:flex flex-col flex-shrink-0 w-64
         bg-surface border-r border-border
@@ -139,7 +165,7 @@ export default function Sidebar() {
         <SidebarContent />
       </aside>
 
-      {/* ── Mobile hamburger trigger ── */}
+      {/* Mobile hamburger */}
       <button
         onClick={() => setDrawerOpen(true)}
         className="
@@ -151,7 +177,7 @@ export default function Sidebar() {
         <RiMenuLine size={18} />
       </button>
 
-      {/* ── Mobile drawer ── */}
+      {/* Mobile drawer */}
       {drawerOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div
