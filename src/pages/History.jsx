@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   RiHistoryLine, RiFilter3Line, RiArrowDownSLine, RiArrowUpSLine,
   RiLoader4Line, RiSearchLine, RiPlayLine,
+  RiPushpin2Line, RiCheckLine, RiFileListLine,
 } from 'react-icons/ri'
 import { useNavigate } from 'react-router-dom'
 import { jobsApi } from './api/jobs'
@@ -60,7 +61,7 @@ function HistoryRow({ record, defaultOpen = false, onRerun }) {
       >
         <div className="flex items-start gap-4 min-w-0">
           <div className="w-9 h-9 rounded-lg bg-surface2 border border-border flex items-center justify-center text-t3 flex-shrink-0 mt-0.5">
-            📌
+            <RiPushpin2Line size={16} />
           </div>
           <div className="min-w-0">
             <h3 className="text-t1 font-bold text-[17px] leading-snug">
@@ -102,7 +103,8 @@ function HistoryRow({ record, defaultOpen = false, onRerun }) {
                       key={i}
                       className="flex items-center gap-1.5 bg-surface2 border border-border text-t2 text-xs font-semibold px-3 py-1.5 rounded-lg"
                     >
-                      ✓ {typeof p === 'string' ? p : p.name ?? p.title ?? JSON.stringify(p)}
+                      <RiCheckLine size={12} className="text-em flex-shrink-0" />
+                      {typeof p === 'string' ? p : p.name ?? p.title ?? JSON.stringify(p)}
                     </span>
                   ))}
                 </div>
@@ -226,7 +228,8 @@ export default function History() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-7">
         <h1 className="text-3xl font-extrabold text-t1 tracking-tight flex items-center gap-3">
-          📋 Search History
+          <RiFileListLine size={26} className="text-t3 flex-shrink-0" />
+          Search History
         </h1>
         <div className="relative">
           <button
