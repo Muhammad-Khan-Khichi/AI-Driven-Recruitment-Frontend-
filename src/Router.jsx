@@ -14,13 +14,16 @@ import Layout from './components/layout/Layout'
 import { ProtectedRoute, AdminRoute } from './components/layout/ProtectedRoute'
 import Placeholder from './components/ui/Placeholder'
 
+// ✅ Import your real Admin page
+import Admin from './pages/Admin'
+
 export default function AppRouter() {
   return (
     <Routes>
       {/* Public */}
       <Route path="/auth" element={<AuthPage />} />
 
-      {/* Authenticated shell */}
+      {/* Authenticated shell — Layout wraps all child routes via Outlet */}
       <Route
         path="/"
         element={
@@ -36,18 +39,18 @@ export default function AppRouter() {
         <Route path="optimizer"    element={<Optimizer />} />
         <Route path="linkedin"     element={<LinkedIn />} />
         <Route path="interview"    element={<Interview />} />
-        <Route path="applications"  element={<Applications />} />
-        <Route path="history"       element={<History />} />
-        <Route path="cover-letter"  element={<CoverLetter />} />
+        <Route path="applications" element={<Applications />} />
+        <Route path="history"      element={<History />} />
+        <Route path="cover-letter" element={<CoverLetter />} />
 
-        {/* Admin only */}
+        {/* ✅ Admin only — points to REAL Admin page, not Placeholder */}
         <Route
           path="admin"
-          element={<AdminRoute><Placeholder title="Admin Panel"  icon="👑" /></AdminRoute>}
-        />
-        <Route
-          path="admin/stats"
-          element={<AdminRoute><Placeholder title="System Stats" icon="📈" /></AdminRoute>}
+          element={
+            <AdminRoute>
+              <Admin />
+            </AdminRoute>
+          }
         />
       </Route>
 
