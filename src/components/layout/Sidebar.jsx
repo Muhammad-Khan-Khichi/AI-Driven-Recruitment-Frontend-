@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   RiDashboardLine, RiFileTextLine, RiSearchLine, RiSparklingLine,
   RiMagicLine, RiBriefcaseLine, RiMicLine, RiClipboardLine,
-  RiHistoryLine, RiCloudLine, RiMailLine,
+  RiHistoryLine, RiCloudLine, RiMailLine, RiUserLine, RiSettingsLine,
   RiLogoutBoxRLine, RiMenuLine, RiCloseLine, RiVipCrownLine,
   RiArrowRightUpLine,
 } from 'react-icons/ri'
@@ -21,6 +21,11 @@ const NAV_ITEMS = [
   { to: '/cover-letter',  icon: RiMailLine,      label: 'Cover Letters' },
   { to: '/applications',  icon: RiClipboardLine, label: 'Applications' },
   { to: '/history',       icon: RiHistoryLine,   label: 'History' },
+]
+
+// ✅ NEW: Account section items
+const ACCOUNT_ITEMS = [
+  { to: '/profile', icon: RiUserLine, label: 'Profile Settings' },
 ]
 
 function useApiHealth() {
@@ -56,7 +61,6 @@ function Brand() {
   )
 }
 
-// ✅ NEW: Admin Panel button card
 function AdminPanelButton({ onClick }) {
   return (
     <button
@@ -92,16 +96,40 @@ function AdminPanelButton({ onClick }) {
   )
 }
 
+// ✅ NEW: Section divider
+function SectionDivider({ label }) {
+  return (
+    <div className="px-3 mt-4 mb-2">
+      <div className="flex items-center gap-2">
+        <div className="text-t4 text-[10px] tracking-widest uppercase font-semibold">
+          {label}
+        </div>
+        <div className="flex-1 h-px bg-border"></div>
+      </div>
+    </div>
+  )
+}
+
 function SidebarContent({ onNavClick }) {
-  const { logout, isAdmin } = useAuth()
+  const { logout, isAdmin, user } = useAuth()
   const online = useApiHealth()
   const navigate = useNavigate()
 
-  // ✅ NEW: handles admin panel click
   const handleAdminClick = () => {
     navigate('/admin')
-    onNavClick?.()   // closes mobile drawer if open
+    onNavClick?.()
   }
+
+  // ✅ NEW: Get user initials for avatar
+  const getInitials = () => {
+    if (user?.full_name) {
+      return user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    if (user?.username) {
+      return user.username.slice(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -113,6 +141,12 @@ function SidebarContent({ onNavClick }) {
       {/* Main nav */}
       <nav className="flex-1 overflow-y-auto px-3 flex flex-col gap-1">
         {NAV_ITEMS.map(item => (
+          <NavItem key={item.to} {...item} onClick={onNavClick} />
+        ))}
+
+        {/* ✅ NEW: Account section */}
+        <SectionDivider label="Account" />
+        {ACCOUNT_ITEMS.map(item => (
           <NavItem key={item.to} {...item} onClick={onNavClick} />
         ))}
       </nav>
@@ -140,7 +174,7 @@ function SidebarContent({ onNavClick }) {
           Logout
         </button>
 
-        {/* ✅ Admin Panel button (only for admins) */}
+        {/* Admin Panel button (only for admins) */}
         {isAdmin() && (
           <div className="px-0">
             <AdminPanelButton onClick={handleAdminClick} />
@@ -172,8 +206,7 @@ export default function Sidebar() {
           md:hidden fixed top-4 left-4 z-40
           w-10 h-10 rounded-lg bg-surface border border-border
           flex items-center justify-center text-t1 shadow-lg
-        "
-      >
+        ">
         <RiMenuLine size={18} />
       </button>
 
