@@ -7,6 +7,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { jobsApi } from './api/jobs'
 import { errMessage } from './utils/errors'
+import { useStore } from '../store/useStore'
 
 const SORT_OPTIONS = ['Recent First', 'Oldest First', 'Most Jobs', 'Most Matches']
 
@@ -175,17 +176,23 @@ function HistoryRow({ record, defaultOpen = false, onRerun }) {
 // ── Main page ────────────────────────────────────────────────
 export default function History() {
   const navigate = useNavigate()
-  const [records, setRecords] = useState([])
+  const records = useStore((s) => s.historyRecords)
+  const setRecords = useStore((s) => s.setHistoryRecords)
+  const sort = useStore((s) => s.historySort)
+  const setSort = useStore((s) => s.setHistorySort)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
-  const [sort, setSort]       = useState('Recent First')
   const [sortOpen, setSortOpen] = useState(false)
 
   useEffect(() => {
-    jobsApi.history()
-      .then(data => setRecords(Array.isArray(data) ? data : []))
-      .catch(e => setError(errMessage(e, 'Could not load search history.')))
-      .finally(() => setLoading(false))
+    if (records.length === 0) {
+      jobsApi.history()
+        .then(data => setRecords(Array.isArray(data) ? data : []))
+        .catch(e => setError(errMessage(e, 'Could not load search history.')))
+        .finally(() => setLoading(false))
+      } else {
+        setLoading(false)
+    }
   }, [])
 
   const sorted = useMemo(() => {
