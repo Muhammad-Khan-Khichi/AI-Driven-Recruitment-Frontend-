@@ -12,6 +12,8 @@ import {
 import { interviewApi } from './api/interview'
 import { errMessage } from './utils/errors'
 
+import { useStore } from '../store/useStore'
+
 // ── Shared: Tab bar ───────────────────────────────────────────
 const TABS = ['Generate Questions', 'Evaluate Answer', 'Study Plan']
 
@@ -443,8 +445,11 @@ function GenerateTab({
     }
   }, [incomingJobTitle])
 
-  const toggleType = (t) => setTypes(prev =>
-    prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
+  // ✅ FIX: Use current value directly instead of functional update
+  const toggleType = (t) => setTypes(
+    selectedTypes.includes(t)
+      ? selectedTypes.filter(x => x !== t)
+      : [...selectedTypes, t]
   )
 
   const generate = async () => {
@@ -529,9 +534,10 @@ function GenerateTab({
             <div className="flex flex-col gap-1.5">
               <span className="label-xs">Number of Questions</span>
               <div className="flex items-center gap-3">
-                <button onClick={() => setNumQuestions(c => Math.max(1, c - 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">−</button>
+                {/* ✅ FIX: Use current value directly */}
+                <button onClick={() => setNumQuestions(Math.max(1, numQuestions - 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">−</button>
                 <span className="text-t1 font-bold w-6 text-center">{numQuestions}</span>
-                <button onClick={() => setNumQuestions(c => Math.min(20, c + 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">+</button>
+                <button onClick={() => setNumQuestions(Math.min(20, numQuestions + 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">+</button>
               </div>
             </div>
             <button onClick={generate} disabled={loading} className="btn-primary !w-auto px-6 gap-2">
@@ -905,9 +911,10 @@ function StudyPlanTab({
           <div className="flex flex-col gap-1.5">
             <label className="label-xs">Days Until Interview</label>
             <div className="flex items-center gap-3">
-              <button onClick={() => setDays(d => Math.max(1, d - 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">−</button>
+              {/* ✅ FIX: Use current value directly */}
+              <button onClick={() => setDays(Math.max(1, days - 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">−</button>
               <span className="text-t1 font-bold w-6 text-center">{days}</span>
-              <button onClick={() => setDays(d => Math.min(90, d + 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">+</button>
+              <button onClick={() => setDays(Math.min(90, days + 1))} className="w-8 h-8 rounded-lg border border-border text-t2 hover:border-border2 hover:text-em transition-all">+</button>
             </div>
           </div>
           <button onClick={generate} disabled={loading} className="btn-primary gap-2">
@@ -1027,19 +1034,30 @@ export default function Interview() {
   const state    = location.state || {}
   const [tab, setTab] = useState('Generate Questions')
 
-  const [genJobTitle, setGenJobTitle]         = useState('')
-  const [genJobDesc, setGenJobDesc]           = useState('')
-  const [genSelectedTypes, setGenTypes]       = useState(['Technical', 'Behavioral'])
-  const [genNumQuestions, setGenNumQuestions] = useState(8)
-  const [genQuestions, setGenQuestions]       = useState([])
+  const genJobTitle = useStore((s) => s.interviewGenJobTitle)
+  const setGenJobTitle = useStore((s) => s.setInterviewGenJobTitle)
+  const genJobDesc = useStore((s) => s.interviewGenJobDesc)
+  const setGenJobDesc = useStore((s) => s.setInterviewGenJobDesc)
+  const genSelectedTypes = useStore((s) => s.interviewGenSelectedTypes)
+  const setGenTypes = useStore((s) => s.setInterviewGenTypes)
+  const genNumQuestions = useStore((s) => s.interviewGenNumQuestions)
+  const setGenNumQuestions = useStore((s) => s.setInterviewGenNumQuestions)
+  const genQuestions = useStore((s) => s.interviewGenQuestions)
+  const setGenQuestions = useStore((s) => s.setInterviewGenQuestions)
 
-  const [evalQuestion, setEvalQuestion]       = useState('')
-  const [evalAnswer, setEvalAnswer]           = useState('')
-  const [evalQuestionType, setEvalType]       = useState('behavioral')
+  const evalQuestion = useStore((s) => s.interviewEvalQuestion)
+  const setEvalQuestion = useStore((s) => s.setInterviewEvalQuestion)
+  const evalAnswer = useStore((s) => s.interviewEvalAnswer)
+  const setEvalAnswer = useStore((s) => s.setInterviewEvalAnswer)
+  const evalQuestionType = useStore((s) => s.interviewEvalType)
+  const setEvalType = useStore((s) => s.setInterviewEvalType)
 
-  const [studyJobTitle, setStudyJobTitle]     = useState('')
-  const [studyJobDesc, setStudyJobDesc]       = useState('')
-  const [studyDays, setStudyDays]             = useState(7)
+  const studyJobTitle = useStore((s) => s.interviewStudyJobTitle)
+  const setStudyJobTitle = useStore((s) => s.setInterviewStudyJobTitle)
+  const studyJobDesc = useStore((s) => s.interviewStudyJobDesc)
+  const setStudyJobDesc = useStore((s) => s.setInterviewStudyJobDesc)
+  const studyDays = useStore((s) => s.interviewStudyDays)
+  const setStudyDays = useStore((s) => s.setInterviewStudyDays)
 
   return (
     <div className="animate-in">
