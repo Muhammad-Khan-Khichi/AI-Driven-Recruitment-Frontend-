@@ -8,6 +8,7 @@ import {
 import { resumeApi } from './api/resume'
 import { useResume } from './context/ResumeContext'
 import { errMessage } from './utils/errors'
+import { useStore } from '../store/useStore'
 
 // ── Text normalizer ──────────────────────────────────────────
 function normalizeText(text) {
@@ -63,11 +64,14 @@ function downloadText(content, filename) {
 export default function Optimizer() {
   const { resumeData } = useResume()
 
-  const [jobDesc, setJobDesc]       = useState('')
-  const [resumeText, setResumeText] = useState('')
+  const jobDesc = useStore((s) => s.optimizerJobDesc)
+  const setJobDesc = useStore((s) => s.setOptimizerJobDesc)
+  const resumeText = useStore((s) => s.optimizerResumeText)
+  const setResumeText = useStore((s) => s.setOptimizerResumeText)
+  const result = useStore((s) => s.optimizerResult)
+  const setResult = useStore((s) => s.setOptimizerResult)
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState('')
-  const [result, setResult]         = useState(null)
 
   const canOptimize = jobDesc.trim().length > 20 && resumeText.trim().length > 50
 
