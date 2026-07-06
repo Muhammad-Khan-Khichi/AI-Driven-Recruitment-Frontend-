@@ -15,6 +15,7 @@ import { jobsApi } from './api/jobs'
 import { coverLetterApi } from './api/coverLetter'
 import { errMessage } from './utils/errors'
 import JobCard from '../components/jobs/JobCard'
+import { useStore } from '../store/useStore'
 
 const SORT_OPTIONS = [
   { value: 'final_score', label: 'Match Score' },
@@ -249,13 +250,21 @@ export default function JobSearch() {
   const { hasResume, resumeData } = useResume()
   const resumeId = extractResumeId(resumeData)
 
-  const [location, setLocation]       = useState(user?.location || '')
-  const [timeFilter, setTimeFilter]   = useState('any')
+  const location = useStore((s) => s.searchLocation)
+  const setLocation = useStore((s) => s.setSearchLocation)
+  const timeFilter = useStore((s) => s.timeFilter)
+  const setTimeFilter = useStore((s) => s.setTimeFilter)
+  const jobs = useStore((s) => s.jobResults)
+  const setJobs = useStore((s) => s.setJobResults)
+  const searchMode = useStore((s) => s.searchMode)
+  const setSearchMode = useStore((s) => s.setSearchMode)
+  const sortBy = useStore((s) => s.sortBy)
+  const setSortBy = useStore((s) => s.setSortBy)
+  const wantCoverLetters = useStore((s) => s.wantCoverLetters)
+  const setWantCoverLetters = useStore((s) => s.setWantCoverLetters)
+
   const [searching, setSearching]     = useState(false)
   const [searchError, setSearchError] = useState('')
-  const [jobs, setJobs]               = useState(null)
-  const [searchMode, setSearchMode]   = useState(null)
-  const [sortBy, setSortBy]           = useState('final_score')
   const [sortOpen, setSortOpen]       = useState(false)
 
   const [trackingIdx, setTrackingIdx] = useState(null)
@@ -263,7 +272,6 @@ export default function JobSearch() {
   const [trackedMsg, setTrackedMsg]   = useState('')
   const [letterMsg, setLetterMsg]     = useState('')
 
-  const [wantCoverLetters, setWantCoverLetters] = useState(false)
 
   const [elapsedSec, setElapsedSec] = useState(0)
   const timerRef = useRef(null)
