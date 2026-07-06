@@ -10,20 +10,22 @@ import Optimizer from './pages/Optimizer'
 import Interview from './pages/Interview'
 import LinkedIn from './pages/LinkedIn'
 import CoverLetter from './pages/CoverLetter'
+import ProfilePage from './pages/ProfilePage'  // ✅ NEW: Profile page
 import Layout from './components/layout/Layout'
 import { ProtectedRoute, AdminRoute } from './components/layout/ProtectedRoute'
 import Placeholder from './components/ui/Placeholder'
-
-// ✅ Import your real Admin page
 import Admin from './pages/Admin'
 
 export default function AppRouter() {
   return (
     <Routes>
       {/* Public */}
-      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/auth"            element={<AuthPage />} />
+      <Route path="/auth/callback"   element={<AuthPage />} />
+      <Route path="/login"           element={<AuthPage />} />
+      <Route path="/reset-password"  element={<AuthPage />} />
 
-      {/* Authenticated shell — Layout wraps all child routes via Outlet */}
+      {/* Authenticated shell */}
       <Route
         path="/"
         element={
@@ -43,7 +45,9 @@ export default function AppRouter() {
         <Route path="history"      element={<History />} />
         <Route path="cover-letter" element={<CoverLetter />} />
 
-        {/* ✅ Admin only — points to REAL Admin page, not Placeholder */}
+        {/* ✅ NEW: Profile Settings */}
+        <Route path="profile" element={<ProfilePage />} />
+
         <Route
           path="admin"
           element={
@@ -52,9 +56,16 @@ export default function AppRouter() {
             </AdminRoute>
           }
         />
+        <Route
+          path="admin/stats"
+          element={
+            <AdminRoute>
+              <Placeholder title="System Stats" icon="📈" />
+            </AdminRoute>
+          }
+        />
       </Route>
 
-      {/* 404 */}
       <Route path="*" element={<Placeholder title="Page not found" icon="❓" />} />
     </Routes>
   )
