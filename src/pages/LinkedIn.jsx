@@ -12,6 +12,7 @@ import {
 } from 'react-icons/ri'
 import { linkedinApi } from './api/linkedin'
 import { errMessage } from './utils/errors'
+import { useStore } from '../store/useStore'
 
 // ── Score ring ────────────────────────────────────────────────────────
 function ScoreRing({ score }) {
@@ -477,17 +478,25 @@ export default function LinkedIn() {
   const [mode, setMode] = useState('full')
 
   // ✅ All form state lives in parent (never gets destroyed)
-  const [currentHeadline, setCurrentHeadline] = useState('')
-  const [currentAbout, setCurrentAbout]       = useState('')
-  const [currentSkills, setCurrentSkills]     = useState('')
-  const [targetRole, setTargetRole]           = useState('')
-  const [yearsExp, setYearsExp]               = useState('')
-  const [industry, setIndustry]               = useState('')
+  const currentHeadline = useStore((s) => s.linkedinHeadline)
+  const setCurrentHeadline = useStore((s) => s.setLinkedinHeadline)
+  const currentAbout = useStore((s) => s.linkedinAbout)
+  const setCurrentAbout = useStore((s) => s.setLinkedinAbout)
+  const currentSkills = useStore((s) => s.linkedinSkills)
+  const setCurrentSkills = useStore((s) => s.setLinkedinSkills)
+  const targetRole = useStore((s) => s.linkedinTargetRole)
+  const setTargetRole = useStore((s) => s.setLinkedinTargetRole)
+  const yearsExp = useStore((s) => s.linkedinYearsExp)
+  const setYearsExp = useStore((s) => s.setLinkedinYearsExp)
+  const industry = useStore((s) => s.linkedinIndustry)
+  const setIndustry = useStore((s) => s.setLinkedinIndustry)
+  const result = useStore((s) => s.linkedinResult)
+  const setResult = useStore((s) => s.setLinkedinResult)
+  const headlineResult = useStore((s) => s.linkedinHeadlineResult)
+  const setHeadlineResult = useStore((s) => s.setLinkedinHeadlineResult)
 
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
-  const [result, setResult]               = useState(null)
-  const [headlineResult, setHeadlineResult] = useState(null)
 
   return (
     <div className="animate-in">
