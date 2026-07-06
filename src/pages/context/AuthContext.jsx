@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { authApi } from '../api/auth'
+import { useStore } from '../../store/useStore'
 
 const AuthContext = createContext(null)
 
@@ -12,7 +13,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (token) {
       authApi.me()
-        .then(data => setUser(data))
+        .then(data => {
+          setUser(data)
+          // ✅ Cache user in localStorage for instant access
+          localStorage.setItem('hire_ai_user', JSON.stringify(data))
+        })
         .catch(() => { logout() })
         .finally(() => setLoading(false))
     } else {
@@ -26,6 +31,7 @@ export function AuthProvider({ children }) {
     setToken(res.access_token)
     const me = await authApi.me()
     setUser(me)
+    localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
   }
 
@@ -35,26 +41,45 @@ export function AuthProvider({ children }) {
     setToken(res.access_token)
     const me = await authApi.me()
     setUser(me)
+    localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
   }
 
   const logout = () => {
     authApi.logout().catch(() => {})
     localStorage.removeItem('hire_ai_token')
+    localStorage.removeItem('hire_ai_user')  // ✅ Clear cached user
     setToken(null)
     setUser(null)
+    useStore.getState().resetAll()
   }
 
   const refreshProfile = async () => {
     const me = await authApi.me()
     setUser(me)
+    // ✅ Update cached user too
+    localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
+  }
+
+  // ✅ NEW: Update profile locally (used after PUT /api/profile/)
+  const updateUser = (updates) => {
+    setUser(prev => {
+      const updated = { ...prev, ...updates }
+      localStorage.setItem('hire_ai_user', JSON.stringify(updated))
+      return updated
+    })
   }
 
   const isAdmin = () => Boolean(user?.is_admin)
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, refreshProfile, isAdmin }}>
+    <AuthContext.Provider value={{
+      user, token, loading,
+      login, signup, logout,
+      refreshProfile, updateUser,  // ✅ Added updateUser
+      isAdmin
+    }}>
       {children}
     </AuthContext.Provider>
   )
