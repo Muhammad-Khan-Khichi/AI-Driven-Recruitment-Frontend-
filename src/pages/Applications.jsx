@@ -7,6 +7,7 @@ import {
 } from 'react-icons/ri'
 import { jobsApi } from './api/jobs'
 import { errMessage } from './utils/errors'
+import { useStore } from '../store/useStore'
 
 // ── Constants ────────────────────────────────────────────────
 const STATUS_OPTIONS = ['All Applications', 'pending', 'applied', 'interview', 'offer', 'rejected']
@@ -336,17 +337,25 @@ function NewEntryModal({ onClose, onSave }) {
 
 // ── Main page ────────────────────────────────────────────────
 export default function Applications() {
-  const [apps, setApps]           = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState('')
-  const [statusFilter, setFilter] = useState('All Applications')
-  const [sortOption, setSort]     = useState('Most Recent')
-  const [search, setSearch]       = useState('')
-  const [page, setPage]           = useState(1)
+  // ✅ Persistent state from Zustand
+  const apps = useStore((s) => s.apps)
+  const setApps = useStore((s) => s.setApps)
+  const statusFilter = useStore((s) => s.statusFilter)
+  const setFilter = useStore((s) => s.setFilter)
+  const sortOption = useStore((s) => s.sortOption)
+  const setSort = useStore((s) => s.setSort)
+  const search = useStore((s) => s.search)
+  const setSearch = useStore((s) => s.setSearch)
+  const page = useStore((s) => s.page)
+  const setPage = useStore((s) => s.setPage)
+
+  // ❌ Local (transient) state
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
-  const [sortOpen, setSortOpen]   = useState(false)
+  const [sortOpen, setSortOpen] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -375,7 +384,7 @@ export default function Applications() {
   }
 
   const handleNewEntry = async (form) => {
-    const saved = await jobsApi.trackApplication(form)
+    await jobsApi.trackApplication(form)
     await load() // reload to get server-assigned id/dates
   }
 
