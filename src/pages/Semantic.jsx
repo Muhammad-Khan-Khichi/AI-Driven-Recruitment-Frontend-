@@ -11,6 +11,7 @@ import { jobsApi } from './api/jobs'
 import { coverLetterApi } from './api/coverLetter'
 import { errMessage } from './utils/errors'
 import JobCard from '../components/jobs/JobCard'
+import { useStore } from '../store/useStore'
 
 // ── Deduplicate jobs ──────────────────────────────────────────
 function deduplicateJobs(jobs) {
@@ -55,10 +56,13 @@ export default function Semantic() {
   const { resumeData } = useResume()
   const resumeId = resumeData?.resume_id ?? resumeData?.id ?? null
 
-  const [query, setQuery]     = useState('')
-  const [topK, setTopK]       = useState(10)
+  const query = useStore((s) => s.semanticQuery)
+  const setQuery = useStore((s) => s.setSemanticQuery)
+  const topK = useStore((s) => s.topK)
+  const setTopK = useStore((s) => s.setTopK)
+  const results = useStore((s) => s.semanticResults)
+  const setResults = useStore((s) => s.setSemanticResults)
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState(null)
   const [error, setError]     = useState('')
 
   const [trackingIdx, setTrackingIdx] = useState(null)
