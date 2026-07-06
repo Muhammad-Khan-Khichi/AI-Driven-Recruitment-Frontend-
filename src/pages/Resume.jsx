@@ -9,6 +9,7 @@ import { errMessage } from './utils/errors'
 import { useResume } from './context/ResumeContext'
 import UploadZone from '../components/resume/UploadZone'
 import SkillChip from '../components/resume/SkillChip'
+import { useStore } from '../store/useStore'
 
 export default function Resume() {
   const navigate = useNavigate()
@@ -16,7 +17,8 @@ export default function Resume() {
 
   const [uploading, setUploading] = useState(false)
   const [error, setError]         = useState('')
-  const [extraSkills, setExtraSkills] = useState([])
+  const extraSkills = useStore((s) => s.extraSkills)
+  const setExtraSkills = useStore((s) => s.setExtraSkills)
   const [addingSkill, setAddingSkill] = useState(false)
   const [newSkill, setNewSkill]       = useState('')
 
