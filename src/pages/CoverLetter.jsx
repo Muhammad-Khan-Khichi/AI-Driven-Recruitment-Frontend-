@@ -9,6 +9,7 @@ import {
 import { useResume } from './context/ResumeContext'
 import { coverLetterApi } from './api/coverLetter'
 import { errMessage } from './utils/errors'
+import { useStore } from '../store/useStore'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -250,17 +251,20 @@ export default function CoverLetter() {
   // Generation state
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
-  const [result, setResult] = useState(null)   // { id, variants, job_title, company, created_at }
+  const result = useStore((s) => s.coverResult)
+  const setResult = useStore((s) => s.setCoverResult)
   const [elapsedSec, setElapsedSec] = useState(0)
   const timerRef = useRef(null)
 
   // Saved letters
-  const [saved, setSaved] = useState([])
+  const saved = useStore((s) => s.savedLetters)
+  const setSaved = useStore((s) => s.setSavedLetters)
   const [savedLoading, setSavedLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
 
   // Modal
-  const [viewLetter, setViewLetter] = useState(null)
+  const viewLetter = useStore((s) => s.viewLetter)
+  const setViewLetter = useStore((s) => s.setViewLetter)
 
   // Update resume_id whenever context loads
   useEffect(() => {
