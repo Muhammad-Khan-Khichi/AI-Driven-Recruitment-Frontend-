@@ -52,7 +52,7 @@ function useApiHealth() {
 function Brand() {
   return (
     <div className="flex items-center gap-2 px-1">
-      <span className="text-2xl leading-none flex-shrink-0">🎯</span>
+      <span className="text-2xl leading-none flex-shrink-0"></span>
       <div className="overflow-hidden">
         <div className="text-t1 font-extrabold text-lg tracking-tight leading-none">HireAI</div>
         <div className="text-t4 text-[10px] tracking-widest mt-1 uppercase">AI-Driven Recruitment</div>
