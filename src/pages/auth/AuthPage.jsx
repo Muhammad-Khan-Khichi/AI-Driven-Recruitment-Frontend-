@@ -9,7 +9,7 @@ import {
 import { useAuth } from '../../pages/context/AuthContext'
 import { errMessage } from '../utils/errors'
 import ThemeToggle from '../../components/ui/ThemeToggle'
-
+import logon from '../../../public/ico.png'
 const API_BASE = 'http://localhost:8000/api'
 
 // ── OAuth callback handler ─────────────────────────────────────────────
@@ -499,7 +499,13 @@ export default function AuthPage() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-7">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-3xl leading-none"></span>
+            <span className="text-3xl leading-none">
+              <img
+                      src={logon}
+                      alt="HireAI logo"
+                      className="w-8 h-8 flex-shrink-0"
+                />
+            </span>
             <span className="text-[1.65rem] font-extrabold tracking-tight text-t1">HireAI</span>
           </div>
           <p className="text-t3 text-sm">AI-Driven Recruitment Pipeline</p>
