@@ -1,13 +1,17 @@
-import { useState } from 'react'
+// src/components/jobs/JobCard.jsx
+import { useState, memo } from 'react'
 import {
   RiDownload2Line, RiPushpinLine, RiMicLine, RiLoader4Line,
-  RiPaletteLine,    // 🎨 → design icon
-  RiBarChartBoxLine, // 📊 → data icon
-  RiTerminalLine,    // 💻 → dev icon
+  RiPaletteLine,
+  RiBarChartBoxLine,
+  RiTerminalLine,
+  RiCheckLine,
+  RiErrorWarningLine,
 } from 'react-icons/ri'
+import { coverLetterApi } from '../../pages/api/coverLetter'
+import { useResume } from '../../pages/context/ResumeContext'
 import ScoreRing from './ScoreRing'
 
-// Stable icon/bg chosen from job source or first skill — purely visual, derived from real data
 function deriveIcon(job) {
   const source = (job.source || '').toLowerCase()
   if (source.includes('design'))   return { bg: '#0C2233', Icon: RiPaletteLine }
@@ -15,12 +19,103 @@ function deriveIcon(job) {
   return { bg: '#162019', Icon: RiTerminalLine }
 }
 
-export default function JobCard({ job, onTrack, onGenerateCoverLetter, onInterviewPrep, tracking, generatingLetter }) {
+function JobCard({ 
+  job, 
+  idx,
+  resumeId,  
+  onTrack, 
+  onGenerateCoverLetter, 
+  onInterviewPrep, 
+  onLetterGenerated,
+  tracking, 
+  generatingLetter 
+}) {
+  const [generated, setGenerated] = useState(false)
+  const [generating, setGenerating] = useState(false)
+  const [msg, setMsg] = useState(null) // { type: 'success' | 'error', text: string }
+
+  const { resumeData } = useResume()
+  const contextResumeId = resumeData?.resume_id ?? resumeData?.id ?? null
+  const effectiveResumeId = resumeId || job.resume_id || contextResumeId
+
   const score = job.final_score ?? job.ai_score ?? job.semantic_score ?? job.score ?? 0
   const { bg, Icon } = deriveIcon(job)
-
-  // Tags: prefer explicit tags/skills field if backend provides one, else nothing (no fabricated tags)
   const tags = job.tags || job.skills || []
+
+  const handleTrack = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    onTrack(job, idx, e)
+  }
+
+  const handleGenerateCoverLetter = async (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+
+    if (!effectiveResumeId) {
+      setMsg({ type: 'error', text: 'Please upload a resume first to generate cover letters.' })
+      setTimeout(() => setMsg(null), 5000)
+      return
+    }
+
+    setGenerating(true)
+    setMsg(null)
+
+    const payload = {
+      resume_id: Number(effectiveResumeId),
+      job_title: job.title || '',
+      company: job.company || '',
+      job_description: job.description || job.job_description || '',
+      job_url: job.url || '',
+      location: job.location || '',
+      tone: 'professional',
+    }
+
+    try {
+      const res = await coverLetterApi.generate(payload)
+      
+      const variant = res?.variants?.find(v => v.tone === 'professional') 
+                   || res?.variants?.[0]
+      
+      if (variant?.body) {
+        setGenerated(true)
+        setMsg({ type: 'success', text: `Cover letter generated for ${job.company}` })
+        onLetterGenerated?.(idx, variant.body, res.id)
+        setTimeout(() => setMsg(null), 4000)
+      } else {
+        setMsg({ type: 'error', text: 'No variant returned' })
+        setTimeout(() => setMsg(null), 4000)
+      }
+    } catch (err) {
+      let detail = 'Generation failed'
+      try {
+        const parsed = JSON.parse(err.message)
+        if (Array.isArray(parsed)) {
+          detail = parsed.map(e => e.msg).join(', ')
+        } else if (parsed?.detail) {
+          detail = parsed.detail
+        }
+      } catch {
+        detail =
+          err?.response?.data?.detail?.[0]?.msg ||
+          err?.response?.data?.detail ||
+          err?.data?.detail ||
+          err?.message ||
+          'Generation failed'
+      }
+      
+      setMsg({ type: 'error', text: detail })
+      setTimeout(() => setMsg(null), 5000)
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleInterviewPrep = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    onInterviewPrep(job, e)
+  }
 
   return (
     <div className="card p-5 flex flex-col gap-4">
@@ -45,7 +140,21 @@ export default function JobCard({ job, onTrack, onGenerateCoverLetter, onIntervi
         <ScoreRing score={score} />
       </div>
 
-      {/* Tags — only rendered if the API actually returned some */}
+      {/* Inline message */}
+      {msg && (
+        <div className={`text-xs font-semibold rounded-lg px-3 py-2 flex items-center gap-2 ${
+          msg.type === 'success' ? 'bg-[#052E1C] border border-em text-em' :
+          msg.type === 'error' ? 'bg-[#2D0A0A] border border-red text-red' :
+          'bg-surface2 border border-border text-t2'
+        }`}>
+          {msg.type === 'success' 
+            ? <RiCheckLine size={14} className="flex-shrink-0" /> 
+            : <RiErrorWarningLine size={14} className="flex-shrink-0" />}
+          <span>{msg.text}</span>
+        </div>
+      )}
+
+      {/* Tags */}
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {tags.slice(0, 6).map((t, i) => (
@@ -68,30 +177,32 @@ export default function JobCard({ job, onTrack, onGenerateCoverLetter, onIntervi
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2.5 mt-1">
-        {job.cover_letter ? (
-          <a
-            href={`data:text/plain;charset=utf-8,${encodeURIComponent(job.cover_letter)}`}
-            download={`cover_letter_${(job.company || 'job').replace(/\s+/g, '_')}.txt`}
-            className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-em text-bg font-semibold text-xs rounded-lg px-3 py-2.5 hover:brightness-110 transition-all"
+        {generated ? (
+          <button
+            type="button"
+            disabled
+            className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-[#052E1C] border border-em text-em font-semibold text-xs rounded-lg px-3 py-2.5 cursor-default"
           >
-            <RiDownload2Line size={14} /> Cover Letter
-          </a>
+            <RiCheckLine size={14} /> Generated
+          </button>
         ) : (
           <button
-            onClick={() => onGenerateCoverLetter(job)}
-            disabled={generatingLetter}
-            title="Tries a dedicated cover-letter endpoint — if your backend doesn't have one, use the 'Generate cover letters' option before searching instead"
+            type="button"
+            onClick={handleGenerateCoverLetter}
+            disabled={generating}
+            title="Generate cover letter for this job"
             className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-em text-bg font-semibold text-xs rounded-lg px-3 py-2.5 hover:brightness-110 transition-all disabled:opacity-60"
           >
-            {generatingLetter
+            {generating
               ? <RiLoader4Line size={14} className="animate-spin" />
               : <RiDownload2Line size={14} />}
-            Cover Letter
+            {generating ? 'Generating…' : 'Cover Letter'}
           </button>
         )}
 
         <button
-          onClick={() => onTrack(job)}
+          type="button"
+          onClick={handleTrack}
           disabled={tracking}
           className="btn-outline flex-1 min-w-[80px] !py-2.5 text-xs"
         >
@@ -100,23 +211,38 @@ export default function JobCard({ job, onTrack, onGenerateCoverLetter, onIntervi
         </button>
 
         <button
-          onClick={() => onInterviewPrep(job)}
+          type="button"
+          onClick={handleInterviewPrep}
           className="btn-outline flex-1 min-w-[80px] !py-2.5 text-xs"
         >
           <RiMicLine size={14} /> Prep
         </button>
       </div>
 
+      {/* View full posting */}
       {job.url && job.url !== '#' && (
-        <a
-          href={job.url}
-          target="_blank"
-          rel="noreferrer"
-          className="text-em text-xs font-medium hover:underline self-start -mt-1"
+        <button
+          type="button"
+          onClick={(e) => {
+            if (e?.preventDefault) e.preventDefault()
+            if (e?.stopPropagation) e.stopPropagation()
+            window.open(job.url, '_blank', 'noopener,noreferrer')
+          }}
+          className="text-em text-xs font-medium hover:underline self-start -mt-1 text-left"
         >
           View full posting →
-        </a>
+        </button>
       )}
     </div>
   )
 }
+
+export default memo(JobCard, (prevProps, nextProps) => {
+  return (
+    prevProps.job === nextProps.job &&
+    prevProps.idx === nextProps.idx &&
+    prevProps.resumeId === nextProps.resumeId &&
+    prevProps.tracking === nextProps.tracking &&
+    prevProps.generatingLetter === nextProps.generatingLetter
+  )
+})
