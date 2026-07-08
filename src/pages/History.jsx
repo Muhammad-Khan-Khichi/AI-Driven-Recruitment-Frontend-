@@ -11,7 +11,7 @@ import { useStore } from '../store/useStore'
 
 const SORT_OPTIONS = ['Recent First', 'Oldest First', 'Most Jobs', 'Most Matches']
 
-// ── Circular confidence ring ─────────────────────────────────
+//    Circular confidence ring                                 ─
 function ConfidenceRing({ value }) {
   const circumference = 2 * Math.PI * 38
   const offset = circumference - (value / 100) * circumference
@@ -34,7 +34,7 @@ function ConfidenceRing({ value }) {
   )
 }
 
-// ── History row ──────────────────────────────────────────────
+//    History row            ─
 function HistoryRow({ record, defaultOpen = false, onRerun }) {
   const [open, setOpen] = useState(defaultOpen)
 
@@ -173,7 +173,7 @@ function HistoryRow({ record, defaultOpen = false, onRerun }) {
   )
 }
 
-// ── Main page ────────────────────────────────────────────────
+//    Main page              ─
 export default function History() {
   const navigate = useNavigate()
   const records = useStore((s) => s.historyRecords)

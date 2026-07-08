@@ -14,7 +14,7 @@ import { linkedinApi } from './api/linkedin'
 import { errMessage } from './utils/errors'
 import { useStore } from '../store/useStore'
 
-// ── Score ring ────────────────────────────────────────────────────────
+//    Score ring                      ─
 function ScoreRing({ score }) {
   const s    = Math.round(score)
   const r    = 26
@@ -44,7 +44,7 @@ function ScoreRing({ score }) {
   )
 }
 
-// ── Parse whatever the backend returns ────────────────────────────────
+//    Parse whatever the backend returns                                 
 function parseProfileResponse(raw) {
   if (!raw) return null
   if (typeof raw === 'object' && !Array.isArray(raw)) return raw
@@ -58,7 +58,7 @@ function parseProfileResponse(raw) {
   return { rawText: String(raw) }
 }
 
-// ── Full Profile mode ─────────────────────────────────────────────────
+//    Full Profile mode                
 function FullProfileMode({ 
   currentHeadline, setCurrentHeadline,
   currentAbout, setCurrentAbout,
@@ -117,7 +117,7 @@ function FullProfileMode({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:h-[calc(100vh-200px)]">
-      {/* ── Left — inputs ── */}
+      {/*    Left — inputs    */}
       <div 
         className="flex flex-col gap-4 overflow-y-auto pr-2" 
         style={{ maxHeight: 'calc(100vh - 200px)' }}
@@ -210,7 +210,7 @@ function FullProfileMode({
         )}
       </div>
 
-      {/* ── Right — results ── */}
+      {/*    Right — results    */}
       <div 
         className="flex flex-col gap-4 overflow-y-auto pr-2" 
         style={{ maxHeight: 'calc(100vh - 200px)' }}
@@ -310,7 +310,7 @@ function FullProfileMode({
   )
 }
 
-// ── Headline Only mode ────────────────────────────────────────────────
+//    Headline Only mode              ─
 function HeadlineMode({
   currentHeadline, setCurrentHeadline,
   targetRole, setTargetRole,
@@ -473,7 +473,7 @@ function HeadlineMode({
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────────────
+//    Main page                        
 export default function LinkedIn() {
   const [mode, setMode] = useState('full')
 

@@ -35,7 +35,7 @@ function extractResumeId(resumeData) {
   return resumeData.resume_id ?? resumeData.id ?? null
 }
 
-// ── Custom dropdown component ─────────────────────────────────
+//    Custom dropdown component                                 ─
 function CustomDropdown({
   value,
   onChange,
@@ -170,7 +170,7 @@ function CustomDropdown({
   )
 }
 
-// ── Custom sort dropdown ───────────────────────────────────────
+//    Custom sort dropdown      
 function SortDropdown({ value, onChange, options }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -256,7 +256,7 @@ function SortDropdown({ value, onChange, options }) {
   )
 }
 
-// ── Main page ────────────────────────────────────────────────
+//    Main page              ─
 export default function JobSearch() {
   const navigate = useNavigate()
   const { user } = useAuth()

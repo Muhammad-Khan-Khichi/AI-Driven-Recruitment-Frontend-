@@ -1,4 +1,3 @@
-// src/components/jobs/JobCard.jsx
 import { useState, memo } from 'react'
 import {
   RiDownload2Line, RiPushpinLine, RiMicLine, RiLoader4Line,
@@ -32,7 +31,7 @@ function JobCard({
 }) {
   const [generated, setGenerated] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [msg, setMsg] = useState(null) // { type: 'success' | 'error', text: string }
+  const [msg, setMsg] = useState(null) 
 
   const { resumeData } = useResume()
   const contextResumeId = resumeData?.resume_id ?? resumeData?.id ?? null

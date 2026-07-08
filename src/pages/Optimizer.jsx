@@ -10,7 +10,7 @@ import { useResume } from './context/ResumeContext'
 import { errMessage } from './utils/errors'
 import { useStore } from '../store/useStore'
 
-// ── Text normalizer ──────────────────────────────────────────
+//    Text normalizer        ─
 function normalizeText(text) {
   if (!text) return ''
   return text
@@ -20,7 +20,7 @@ function normalizeText(text) {
     .trim()
 }
 
-// ── Score ring ────────────────────────────────────────────────
+//    Score ring              ─
 function ScoreRing({ score, size = 96 }) {
   const s    = Math.round(score ?? 0)
   const r    = 34

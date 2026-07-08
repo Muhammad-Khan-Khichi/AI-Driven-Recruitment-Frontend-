@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
-/* ── Class-based dark mode ───────────────────────────────────
+/*    Class-based dark mode  
    v4 defaults `dark:` to the prefers-color-scheme media query.
    We want manual control via a `.dark` class on <html>, toggled
    by ThemeContext — this line repoints the variant. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── Design tokens ────────────────────────────────────────────
+/*    Design tokens          ─
    Every --color-* variable below automatically becomes a
    Tailwind utility: --color-bg → bg-bg / text-bg / border-bg, etc.
    Dark values are the defaults; light overrides live in the
@@ -45,7 +45,7 @@
   --shadow-lg-em:0 8px 40px rgba(16,185,129,0.10);
 }
 
-/* ── Light mode token overrides ──────────────────────────────
+/*    Light mode token overrides                               
    Tailwind v4 generates utilities from the @theme values above
    at build time, so they can't be swapped at runtime by class
    alone. Instead we redeclare the underlying CSS custom
@@ -85,7 +85,7 @@
 }
 
 @layer components {
-  /* ── Input base ─────────────────────────── */
+  /*    Input base                           ─ */
   .input-base {
     @apply w-full bg-surface2 border border-border rounded-lg px-4 py-3
            text-t1 placeholder-t4 text-sm outline-none
@@ -93,7 +93,7 @@
            focus:border-border2 focus:shadow-[var(--shadow-em)];
   }
 
-  /* ── Primary button ─────────────────────── */
+  /*    Primary button                       ─ */
   .btn-primary {
     @apply w-full bg-em text-bg font-semibold rounded-lg px-4 py-3
            flex items-center justify-center gap-2 text-sm
@@ -101,7 +101,7 @@
            hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  /* ── Outline button ─────────────────────── */
+  /*    Outline button                       ─ */
   .btn-outline {
     @apply border border-border text-t3 bg-surface2 font-medium rounded-lg px-4 py-3
            flex items-center justify-center gap-2 text-sm
@@ -109,17 +109,17 @@
            hover:border-border2 hover:text-t1 active:scale-[0.98];
   }
 
-  /* ── Card ───────────────────────────────── */
+  /*    Card                                 ─ */
   .card {
     @apply bg-surface border border-border rounded-xl shadow-[var(--shadow-card)];
   }
 
-  /* ── Section label ──────────────────────── */
+  /*    Section label                          */
   .label-xs {
     @apply text-[10px] font-semibold tracking-widest uppercase text-t3;
   }
 
-  /* ── Status pills ───────────────────────── */
+  /*    Status pills                         ─ */
   .pill-pending   { @apply bg-surface2 text-t2 border border-border; }
   .pill-applied   { @apply bg-[#0C2233] text-cyan border border-[#0E3347]; }
   .pill-interview { @apply bg-[#2D1A00] text-amber border border-[#3D2400]; }
@@ -127,7 +127,7 @@
   .pill-rejected  { @apply bg-[#2D0A0A] text-red border border-[#3D1212]; }
   .pill-admin     { @apply bg-surface3 text-t2 border border-border2; }
 
-  /* ── NEW: Cold Email components ─────────── */
+  /*    NEW: Cold Email components           ─ */
 
   /* Gradient button for primary CTAs (Generate) */
   .btn-gradient {

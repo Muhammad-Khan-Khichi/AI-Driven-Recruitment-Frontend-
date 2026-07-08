@@ -1,5 +1,3 @@
-// import { scoreColor } from '../../utils/statusConfig'
-
 function matchLabel(score) {
   if (score >= 90) return 'Elite Match'
   if (score >= 80) return 'Strong Match'

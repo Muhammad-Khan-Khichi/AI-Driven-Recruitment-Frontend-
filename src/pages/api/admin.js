@@ -1,6 +1,5 @@
 import client from './client'
 
-// ✅ All admin endpoints
 export const adminApi = {
   // GET /api/admin/stats
   // Response: { total_users, total_admins, total_resumes, total_searches, total_applications, users_today }

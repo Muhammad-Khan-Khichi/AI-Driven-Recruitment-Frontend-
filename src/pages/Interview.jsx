@@ -14,7 +14,7 @@ import { errMessage } from './utils/errors'
 
 import { useStore } from '../store/useStore'
 
-// ── Shared: Tab bar ───────────────────────────────────────────
+//    Shared: Tab bar          
 const TABS = ['Generate Questions', 'Evaluate Answer', 'Study Plan']
 
 function TabBar({ active, onChange }) {
@@ -34,7 +34,7 @@ function TabBar({ active, onChange }) {
   )
 }
 
-// ── Question type chips ───────────────────────────────────────
+//    Question type chips      
 const Q_TYPES = [
   { key: 'Technical',   Icon: RiTerminalLine,  color: 'border-em text-em bg-[#052E1C]' },
   { key: 'Behavioral',  Icon: RiTeamLine,      color: 'border-em text-em bg-[#052E1C]' },
@@ -57,7 +57,7 @@ function TypeChip({ label, Icon, active, color, onClick }) {
   )
 }
 
-// ── Custom dropdown ───────────────────────────────────────────
+//    Custom dropdown          
 function CustomDropdown({ label, value, onChange, options }) {
   const [open, setOpen] = useState(false)
 
@@ -120,7 +120,7 @@ function CustomDropdown({ label, value, onChange, options }) {
   )
 }
 
-// ── Robust parsers ────────────────────────────────────────────
+//    Robust parsers          ─
 function parseAIResponse(res) {
   let data = res
   if (typeof res === 'string') {
@@ -186,10 +186,10 @@ function extractPlan(res) {
   return { plan: Array.isArray(plan) ? plan : [], resources }
 }
 
-// ─────────────────────────────────────────────────────────────
+//                            
 // ✅ FIX: Bulletproof extractor — finds the answer no matter
 // what shape or field name the backend uses
-// ─────────────────────────────────────────────────────────────
+//                            
 function extractEvaluation(res) {
   let data = parseAIResponse(res)
   if (!data || typeof data !== 'object') data = {}
@@ -306,7 +306,7 @@ function extractEvaluation(res) {
   }
 }
 
-// ── Question card ─────────────────────────────────────────────
+//    Question card            
 function QuestionCard({ n, question }) {
   const text = (
     question?.question ??
@@ -384,7 +384,7 @@ function QuestionCard({ n, question }) {
   )
 }
 
-// ── Copy-to-clipboard button ──────────────────────────────────
+//    Copy-to-clipboard button                                   
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false)
 
@@ -426,7 +426,7 @@ function CopyButton({ text }) {
   )
 }
 
-// ── Generate Questions tab ────────────────────────────────────
+//    Generate Questions tab  ─
 function GenerateTab({
   jobTitle, setJobTitle,
   jobDescription, setJobDesc,
@@ -612,7 +612,7 @@ function GenerateTab({
   )
 }
 
-// ── Evaluate Answer tab ───────────────────────────────────────
+//    Evaluate Answer tab      
 function EvaluateTab({
   question, setQuestion,
   answer, setAnswer,
@@ -844,7 +844,7 @@ function EvaluateTab({
   )
 }
 
-// ── Study Plan tab ────────────────────────────────────────────
+//    Study Plan tab          ─
 function StudyPlanTab({
   studyJobTitle, setStudyJobTitle,
   studyJobDesc, setStudyJobDesc,
@@ -1028,7 +1028,7 @@ function StudyPlanTab({
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────
+//    Main page                
 export default function Interview() {
   const location = useLocation()
   const state    = location.state || {}

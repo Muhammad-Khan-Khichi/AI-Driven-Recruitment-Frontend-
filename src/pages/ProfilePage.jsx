@@ -4,9 +4,9 @@ import { useAuth } from '../pages/context/AuthContext';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// ─────────────────────────────────────────────────────────
+//                        
 // Modular Icons & Toasts
-// ─────────────────────────────────────────────────────────
+//                        
 const Icon = ({ name, size = 24, fill = false, className = '' }) => (
   <span
     className={`material-symbols-outlined select-none inline-block align-middle ${className}`}
@@ -48,9 +48,9 @@ const Toast = ({ type, text, onClose }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────
+//                        
 // Main Component
-// ─────────────────────────────────────────────────────────
+//                        
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { updateUser, logout } = useAuth();

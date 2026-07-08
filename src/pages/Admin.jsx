@@ -15,7 +15,7 @@ import { adminApi } from './api/admin'
 import { errMessage } from './utils/errors'
 import AdminSidebar from '../components/admin/AdminSidebar'
 
-// ── Breadcrumbs ───────────────────────────────────────────────
+//  Breadcrumbs
 function Breadcrumbs({ activeTab, onTabChange }) {
   return (
     <nav className="flex items-center gap-1.5 text-sm mb-5 flex-wrap">
@@ -38,7 +38,7 @@ function Breadcrumbs({ activeTab, onTabChange }) {
   )
 }
 
-// ── Stat card ────────────────────────────────────────────────
+//  Stat card 
 function StatCard({ label, value, Icon, color, sub }) {
   return (
     <div className="card px-5 py-5 flex items-start justify-between gap-4">
@@ -56,7 +56,7 @@ function StatCard({ label, value, Icon, color, sub }) {
   )
 }
 
-// ── User row ─────────────────────────────────────────────────
+//  User row 
 function UserRow({ user, onAction, busy }) {
   const created = new Date(user.created_at)
   const dateStr = created.toLocaleDateString('en-US', {
@@ -145,7 +145,7 @@ function UserRow({ user, onAction, busy }) {
   )
 }
 
-// ── Confirm dialog ───────────────────────────────────────────
+//  Confirm dialog 
 function ConfirmDialog({ open, title, message, onConfirm, onCancel, danger }) {
   if (!open) return null
   return (
@@ -185,7 +185,7 @@ function ConfirmDialog({ open, title, message, onConfirm, onCancel, danger }) {
   )
 }
 
-// ── Generic list ─────────────────────────────────────────────
+//  Generic list 
 function GenericList({ items, columns, loading, empty }) {
   if (loading) {
     return (
@@ -231,7 +231,7 @@ function GenericList({ items, columns, loading, empty }) {
   )
 }
 
-// ── Tab content components ───────────────────────────────────
+//    Tab content components  
 function OverviewTab({ stats, loading }) {
   if (loading) {
     return (
@@ -467,7 +467,7 @@ function ApplicationsTab({ items, loading, onRefresh }) {
   )
 }
 
-// ── Main admin page ──────────────────────────────────────────
+//    Main admin page        ─
 export default function Admin() {
   const [tab, setTab] = useState('Overview')
 

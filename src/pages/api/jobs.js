@@ -13,33 +13,33 @@ export const jobsApi = {
   // Generic search — location only, no resume tie-in. Runs the job search agent broadly.
   // Real pipeline: fetch from job boards (Adzuna/Jooble/LinkedIn) → semantic search → AI ranking.
   // This regularly takes 1-5+ minutes depending on how many keyword combinations run.
-  // ✅ UPDATED: now accepts timeFilter ("24h" | "7d" | "30d" | "any")
+  //  accepts timeFilter ("24h" | "7d" | "30d" | "any")
   search: (location, generateCoverLetters = false, timeFilter = 'any') =>
     longRunningClient.post('/jobs/search', {
       location,
       generate_cover_letters: generateCoverLetters,
-      time_filter: timeFilter,   // ✅ NEW
+      time_filter: timeFilter, 
     }),
 
   // Resume-driven search — extracts skills from a specific resume, builds keyword
   // combinations, scores each job against resume skills, sorts by match score,
   // filters by min_match_score. Runs the full pipeline per keyword combination
   // sequentially, so this can take several minutes.
-  // ✅ UPDATED: now accepts timeFilter
+  // accepts timeFilter
   searchByResume: ({
     resumeId,
     location,
     maxResultsPerKeyword = 20,
     minMatchScore = 20,
     generateCoverLetters = false,
-    timeFilter = 'any',   // ✅ NEW
+    timeFilter = 'any',  
   }) => longRunningClient.post('/jobs/search-by-resume', {
     resume_id: resumeId,
     location,
     max_results_per_keyword: maxResultsPerKeyword,
     min_match_score: minMatchScore,
     generate_cover_letters: generateCoverLetters,
-    time_filter: timeFilter,   // ✅ NEW
+    time_filter: timeFilter, 
   }),
 
   history: () => client.get('/jobs/history'),

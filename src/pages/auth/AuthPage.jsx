@@ -12,7 +12,7 @@ import ThemeToggle from '../../components/ui/ThemeToggle'
 import logon from '../../../public/ico.png'
 const API_BASE = 'http://localhost:8000/api'
 
-// ── OAuth callback handler ─────────────────────────────────────────────
+//OAuth callback handler
 function useOAuthCallback() {
   const location  = useLocation()
   const navigate  = useNavigate()
@@ -50,7 +50,7 @@ function useOAuthCallback() {
   return oauthError
 }
 
-// ── Field ─────────────────────────────────────────────────────────────
+//  Field
 function Field({ label, id, icon: Icon, type = 'text', placeholder, value, onChange, right, error }) {
   const [show, setShow] = useState(false)
   const isPassword = type === 'password'
@@ -92,7 +92,7 @@ function Field({ label, id, icon: Icon, type = 'text', placeholder, value, onCha
   )
 }
 
-// ── Divider ────────────────────────────────────────────────────────────
+//  Divider 
 function OrDivider() {
   return (
     <div className="flex items-center gap-3 my-1">
@@ -103,7 +103,7 @@ function OrDivider() {
   )
 }
 
-// ── OAuth button ───────────────────────────────────────────────────────
+//  OAuth button 
 function OAuthBtn({ icon: Icon, label, href }) {
   return (
     <a
@@ -123,7 +123,7 @@ function OAuthBtn({ icon: Icon, label, href }) {
   )
 }
 
-// ── Sign In form ───────────────────────────────────────────────────────
+//  Sign In form 
 function SignInForm({ globalError, onForgot }) {
   const { login } = useAuth()
   const navigate  = useNavigate()
@@ -194,7 +194,7 @@ function SignInForm({ globalError, onForgot }) {
   )
 }
 
-// ── Sign Up form ───────────────────────────────────────────────────────
+// Sign Up form 
 function SignUpForm({ globalError }) {
   const { signup } = useAuth()
   const navigate   = useNavigate()
@@ -263,7 +263,7 @@ function SignUpForm({ globalError }) {
   )
 }
 
-// ── Forgot Password form ───────────────────────────────────────────────
+//  Forgot Password form 
 function ForgotPasswordForm({ onBack, onSent }) {
   const [email,   setEmail]   = useState('')
   const [error,   setError]   = useState('')
@@ -331,7 +331,7 @@ function ForgotPasswordForm({ onBack, onSent }) {
   )
 }
 
-// ── Email Sent confirmation ────────────────────────────────────────────
+//  Email Sent confirmation 
 function EmailSentMessage({ email, onBack }) {
   return (
     <div className="flex flex-col gap-4 animate-in text-center">
@@ -367,7 +367,7 @@ function EmailSentMessage({ email, onBack }) {
   )
 }
 
-// ── Reset Password form (used when user clicks email link) ─────────────
+//  Reset Password form (used when user clicks email link) 
 function ResetPasswordForm({ token, onBack, onSuccess }) {
   const [password, setPassword] = useState('')
   const [confirm,  setConfirm]  = useState('')
@@ -444,7 +444,7 @@ function ResetPasswordForm({ token, onBack, onSuccess }) {
   )
 }
 
-// ── Password Reset Success ─────────────────────────────────────────────
+//  Password Reset Success 
 function PasswordResetSuccess({ onDone }) {
   return (
     <div className="flex flex-col gap-4 animate-in text-center">
@@ -469,7 +469,7 @@ function PasswordResetSuccess({ onDone }) {
   )
 }
 
-// ── Main AuthPage ──────────────────────────────────────────────────────
+//  Main AuthPage 
 export default function AuthPage() {
   const [mode, setMode] = useState('signin')  // signin | signup | forgot | sent | reset | success
   const [sentEmail, setSentEmail] = useState('')

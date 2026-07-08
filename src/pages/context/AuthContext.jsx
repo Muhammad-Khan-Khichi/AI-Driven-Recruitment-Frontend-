@@ -9,13 +9,13 @@ export function AuthProvider({ children }) {
   const [token, setToken]     = useState(() => localStorage.getItem('hire_ai_token'))
   const [loading, setLoading] = useState(true)
 
-  // On mount — if token exists, fetch /auth/me
+  // On mount  if token exists, fetch /auth/me
   useEffect(() => {
     if (token) {
       authApi.me()
         .then(data => {
           setUser(data)
-          // ✅ Cache user in localStorage for instant access
+
           localStorage.setItem('hire_ai_user', JSON.stringify(data))
         })
         .catch(() => { logout() })
@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     authApi.logout().catch(() => {})
     localStorage.removeItem('hire_ai_token')
-    localStorage.removeItem('hire_ai_user')  // ✅ Clear cached user
+    localStorage.removeItem('hire_ai_user')  
     setToken(null)
     setUser(null)
     useStore.getState().resetAll()
@@ -57,12 +57,12 @@ export function AuthProvider({ children }) {
   const refreshProfile = async () => {
     const me = await authApi.me()
     setUser(me)
-    // ✅ Update cached user too
+
     localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
   }
 
-  // ✅ NEW: Update profile locally (used after PUT /api/profile/)
+  // profile locally (used after PUT /api/profile/)
   const updateUser = (updates) => {
     setUser(prev => {
       const updated = { ...prev, ...updates }
@@ -77,7 +77,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       user, token, loading,
       login, signup, logout,
-      refreshProfile, updateUser,  // ✅ Added updateUser
+      refreshProfile, updateUser, 
       isAdmin
     }}>
       {children}

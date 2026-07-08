@@ -11,7 +11,7 @@ export const coverLetterApi = {
   // GET /cover-letter/{id}
   getOne: (id) => client.get(`/cover-letter/${id}`),
 
-  // ✅ VERSION 3: Smart update that tries query param first, then JSON body
+
   update: async (id, finalText) => {
     // First try: query param (your original format)
     try {

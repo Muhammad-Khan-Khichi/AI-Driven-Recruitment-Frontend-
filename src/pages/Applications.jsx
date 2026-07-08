@@ -8,7 +8,7 @@ import {
 import { jobsApi } from './api/jobs'
 import { errMessage } from './utils/errors'
 
-// ── Constants ────────────────────────────────────────────────
+//    Constants              ─
 const STATUS_OPTIONS = ['All Applications', 'pending', 'applied', 'interview', 'offer', 'rejected']
 const SORT_OPTIONS   = ['Most Recent', 'Oldest', 'Highest Score', 'Company A-Z']
 const PAGE_SIZE      = 5
@@ -32,7 +32,7 @@ function scoreBar(score = 0) {
   return { s, color }
 }
 
-// ── Styled Status Dropdown (fully custom, no native <select>) ─
+//    Styled Status Dropdown (fully custom, no native <select>) ─
 function StatusDropdown({ value, onChange, disabled, variant = 'desktop' }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -128,7 +128,7 @@ function StatusDropdown({ value, onChange, disabled, variant = 'desktop' }) {
   )
 }
 
-// ── Stat card ────────────────────────────────────────────────
+//    Stat card              ─
 function StatCard({ label, value, sub, accent = 'text-em' }) {
   return (
     <div className="card px-4 sm:px-5 py-4 sm:py-5 flex flex-col gap-1 min-w-0">
@@ -141,7 +141,7 @@ function StatCard({ label, value, sub, accent = 'text-em' }) {
   )
 }
 
-// ── Desktop row ───────────────────────────────────────────────
+//    Desktop row              
 function AppRowDesktop({ app, onStatusChange, updating }) {
   const [expanded, setExpanded] = useState(false)
   const { s, color } = scoreBar(app.match_score ?? app.ai_score ?? app.score)
@@ -248,7 +248,7 @@ function AppRowDesktop({ app, onStatusChange, updating }) {
   )
 }
 
-// ── Mobile row ────────────────────────────────────────────────
+//    Mobile row              ─
 function AppRowMobile({ app, onStatusChange, updating }) {
   const [expanded, setExpanded] = useState(false)
   const { s, color } = scoreBar(app.match_score ?? app.ai_score ?? app.score)
@@ -338,7 +338,7 @@ function AppRowMobile({ app, onStatusChange, updating }) {
   )
 }
 
-// ── New Entry modal ───────────────────────────────────────────
+//    New Entry modal          
 function NewEntryModal({ onClose, onSave }) {
   const [form, setForm]   = useState({ job_title: '', company: '', job_url: '', status: 'applied', notes: '' })
   const [saving, setSaving] = useState(false)
@@ -380,9 +380,9 @@ function NewEntryModal({ onClose, onSave }) {
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────
+//    Main page                
 export default function Applications() {
-  // ── All state kept LOCAL — avoids Zustand shape mismatches ──
+  //    All state kept LOCAL — avoids Zustand shape mismatches   
   const [apps, setApps]           = useState([])   // always an array
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState('')

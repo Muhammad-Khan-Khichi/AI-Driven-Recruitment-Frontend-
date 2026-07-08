@@ -1,7 +1,7 @@
 import client, { longRunningClient } from './client'
 
 export const interviewApi = {
-  // ── Generate role-specific interview questions ─────────────
+  //  Generate role-specific interview questions
   // Request schema (per your FastAPI endpoint):
   // {
   //   "job_title": string,
@@ -15,7 +15,7 @@ export const interviewApi = {
   generateQuestions: (payload) =>
     longRunningClient.post('/interview/questions', payload),
 
-  // ── Evaluate a typed answer against a question ─────────────
+  // Evaluate a typed answer against a question
   // Request schema:
   // {
   //   "question": string,
@@ -27,7 +27,7 @@ export const interviewApi = {
   evaluateAnswer: (payload) =>
     longRunningClient.post('/interview/evaluate', payload),
 
-  // ── Generate a personalized study plan ─────────────────────
+  //    Generate a personalized study plan                     ─
   // Request schema:
   // {
   //   "job_title": string,

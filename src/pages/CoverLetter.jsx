@@ -11,7 +11,7 @@ import { coverLetterApi } from './api/coverLetter'
 import { errMessage } from './utils/errors'
 import { useStore } from '../store/useStore'
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+//   ─ helpers                              ─
 
 function extractResumeId(resumeData) {
   if (!resumeData) return ''
@@ -33,7 +33,7 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-// ─── sub-components ─────────────────────────────────────────────────────────
+//   ─ sub-components                        
 
 /** Single variant card rendered in the generator result area */
 function VariantCard({ variant, letterId, onSaved }) {
@@ -349,7 +349,7 @@ function DetailModal({ letter, onClose }) {
   )
 }
 
-// ─── main page ───────────────────────────────────────────────────────────────
+//   ─ main page                              
 
 export default function CoverLetter() {
   const navigate = useNavigate()
@@ -476,7 +476,7 @@ export default function CoverLetter() {
 
   return (
     <div className="animate-in">
-      {/* ── Page header ── */}
+      {/*    Page header    */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-t1 tracking-tight flex items-center gap-3">
@@ -488,7 +488,7 @@ export default function CoverLetter() {
         </div>
       </div>
 
-      {/* ── Two-column layout ── */}
+      {/*    Two-column layout    */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 xl:items-start">
 
         {/* ════ Left — Generator ════ */}
@@ -640,7 +640,7 @@ export default function CoverLetter() {
             )}
           </div>
 
-          {/* ── Results ── */}
+          {/*    Results    */}
           {result && (
             <div className="flex flex-col gap-5 animate-in">
               <div className="flex items-center gap-3 bg-[#052E1C] border border-em rounded-xl px-5 py-3.5">

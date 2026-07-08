@@ -13,7 +13,7 @@ import { errMessage } from './utils/errors'
 import JobCard from '../components/jobs/JobCard'
 import { useStore } from '../store/useStore'
 
-// ── Deduplicate jobs ──────────────────────────────────────────
+//    Deduplicate jobs        ─
 function deduplicateJobs(jobs) {
   if (!Array.isArray(jobs)) return []
   
@@ -29,7 +29,7 @@ function deduplicateJobs(jobs) {
   return Array.from(seen.values())
 }
 
-// ── Build cover letter payload ─────────────────────────────────
+//    Build cover letter payload                                 ─
 function buildCoverLetterPayload(job, resumeId) {
   const base = {
     job_title: job.title || '',
@@ -50,7 +50,7 @@ function buildCoverLetterPayload(job, resumeId) {
   return base
 }
 
-// ── Main page ─────────────────────────────────────────────────
+//    Main page                
 export default function Semantic() {
   const navigate = useNavigate()
   const { resumeData } = useResume()
