@@ -9,6 +9,8 @@ import {
 } from 'react-icons/ri'
 import { useAuth } from '../../pages/context/AuthContext'
 import NavItem from './NavItem'
+import logo from '../../assets/logo.svg'
+import logon from '../../../public/ico.png'
 
 const NAV_ITEMS = [
   { to: '/',              icon: RiDashboardLine, label: 'Dashboard',     end: true },
@@ -23,7 +25,7 @@ const NAV_ITEMS = [
   { to: '/history',       icon: RiHistoryLine,   label: 'History' },
 ]
 
-// ✅ NEW: Account section items
+// Account section items
 const ACCOUNT_ITEMS = [
   { to: '/profile', icon: RiUserLine, label: 'Profile Settings' },
 ]
@@ -52,7 +54,11 @@ function useApiHealth() {
 function Brand() {
   return (
     <div className="flex items-center gap-2 px-1">
-      <span className="text-2xl leading-none flex-shrink-0"></span>
+      <img
+        src={logon}
+        alt="HireAI logo"
+        className="w-8 h-9 flex-shrink-0"
+      />
       <div className="overflow-hidden">
         <div className="text-t1 font-extrabold text-lg tracking-tight leading-none">HireAI</div>
         <div className="text-t4 text-[10px] tracking-widest mt-1 uppercase">AI-Driven Recruitment</div>
@@ -96,7 +102,7 @@ function AdminPanelButton({ onClick }) {
   )
 }
 
-// ✅ NEW: Section divider
+// Section divider
 function SectionDivider({ label }) {
   return (
     <div className="px-3 mt-4 mb-2">
@@ -120,7 +126,7 @@ function SidebarContent({ onNavClick }) {
     onNavClick?.()
   }
 
-  // ✅ NEW: Get user initials for avatar
+  // Get user initials for avatar
   const getInitials = () => {
     if (user?.full_name) {
       return user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -144,7 +150,7 @@ function SidebarContent({ onNavClick }) {
           <NavItem key={item.to} {...item} onClick={onNavClick} />
         ))}
 
-        {/* ✅ NEW: Account section */}
+        {/* Account section */}
         <SectionDivider label="Account" />
         {ACCOUNT_ITEMS.map(item => (
           <NavItem key={item.to} {...item} onClick={onNavClick} />
