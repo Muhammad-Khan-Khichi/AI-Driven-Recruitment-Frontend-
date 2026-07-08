@@ -45,35 +45,99 @@ function VariantCard({ variant, letterId, onSaved }) {
   const [saveMsg, setSaveMsg] = useState('')
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(variant.body)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleDownload = () => {
-    const blob = new Blob([variant.body], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `cover_letter_${variant.tone}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const handleSaveEdit = async () => {
-    if (!letterId) return
-    setSaving(true)
     try {
-      await coverLetterApi.update(letterId, draft)
-      setSaveMsg('Saved!')
+      await navigator.clipboard.writeText(variant.body)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Copy failed:', err)
+    }
+  }
+
+  const handleDownload = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    
+    try {
+      const blob = new Blob([variant.body], { type: 'text/plain;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = `cover_letter_${variant.tone}.txt`
+      
+      document.body.appendChild(a)
+      a.click()
+      
+      setTimeout(() => {
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 100)
+    } catch (err) {
+      console.error('Download failed:', err)
+    }
+  }
+
+  // ✅ FIXED: Better error handling + shows real error
+  const handleSaveEdit = async (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    
+    console.log('🔍 [Save Edit] Starting...')
+    console.log('   letterId:', letterId)
+    console.log('   draft length:', draft.length)
+    
+    if (!letterId) {
+      console.error('❌ No letterId!')
+      setSaveMsg('❌ Cannot save — letter ID missing')
+      setTimeout(() => setSaveMsg(''), 4000)
+      return
+    }
+    
+    // ✅ Guard against empty/same content
+    if (!draft.trim()) {
+      setSaveMsg('❌ Cannot save empty content')
+      setTimeout(() => setSaveMsg(''), 4000)
+      return
+    }
+    
+    if (draft === variant.body) {
+      setSaveMsg('ℹ️ No changes to save')
       setEditing(false)
+      setTimeout(() => setSaveMsg(''), 2000)
+      return
+    }
+    
+    setSaving(true)
+    setSaveMsg('')
+    try {
+      console.log('📤 [Save Edit] Calling coverLetterApi.update...')
+      const result = await coverLetterApi.update(letterId, draft)
+      console.log('✅ [Save Edit] Success:', result)
+      setSaveMsg('✅ Saved!')
+      setEditing(false)
+      
+      // ✅ Update the variant body locally so UI reflects the change
+      variant.body = draft
+      
       onSaved?.()
     } catch (err) {
-      setSaveMsg(errMessage(err, 'Save failed'))
+      console.error('❌ [Save Edit] Error:', err)
+      console.error('   Status:', err.response?.status)
+      console.error('   Data:', err.response?.data)
+      
+      // ✅ Show the actual backend error
+      const detail = err.response?.data?.detail || err.message || 'Save failed'
+      setSaveMsg(`❌ ${detail}`)
     } finally {
       setSaving(false)
-      setTimeout(() => setSaveMsg(''), 2500)
+      setTimeout(() => setSaveMsg(''), 5000)
     }
+  }
+
+  const handleCancelEdit = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    setDraft(variant.body)
+    setEditing(false)
   }
 
   return (
@@ -91,6 +155,7 @@ function VariantCard({ variant, letterId, onSaved }) {
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setEditing(e => !e)}
             className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
               editing
@@ -100,11 +165,19 @@ function VariantCard({ variant, letterId, onSaved }) {
           >
             <RiEditLine size={13} /> {editing ? 'Cancel' : 'Edit'}
           </button>
-          <button onClick={handleCopy} className="btn-outline-em !px-3 !py-1.5 !text-xs">
+          <button 
+            type="button"
+            onClick={handleCopy} 
+            className="btn-outline-em !px-3 !py-1.5 !text-xs"
+          >
             {copied ? <RiCheckLine size={13} /> : <RiFileCopyLine size={13} />}
             {copied ? 'Copied' : 'Copy'}
           </button>
-          <button onClick={handleDownload} className="btn-outline-cyan !px-3 !py-1.5 !text-xs">
+          <button 
+            type="button"
+            onClick={handleDownload} 
+            className="btn-outline-cyan !px-3 !py-1.5 !text-xs"
+          >
             <RiDownload2Line size={13} /> .txt
           </button>
         </div>
@@ -119,8 +192,9 @@ function VariantCard({ variant, letterId, onSaved }) {
             rows={14}
             className="input-base font-mono text-xs leading-relaxed resize-y"
           />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
+              type="button"
               onClick={handleSaveEdit}
               disabled={saving}
               className="btn-primary !w-auto px-4 py-2 text-xs"
@@ -128,8 +202,20 @@ function VariantCard({ variant, letterId, onSaved }) {
               {saving ? <RiLoader4Line size={13} className="animate-spin" /> : <RiSaveLine size={13} />}
               Save edits
             </button>
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              disabled={saving}
+              className="btn-outline !w-auto px-4 py-2 text-xs"
+            >
+              Cancel
+            </button>
             {saveMsg && (
-              <span className={`text-xs font-semibold ${saveMsg === 'Saved!' ? 'text-em' : 'text-red'}`}>
+              <span className={`text-xs font-semibold ${
+                saveMsg.startsWith('✅') ? 'text-em' : 
+                saveMsg.startsWith('❌') ? 'text-red' : 
+                'text-t3'
+              }`}>
                 {saveMsg}
               </span>
             )}
@@ -146,6 +232,16 @@ function VariantCard({ variant, letterId, onSaved }) {
 
 /** Saved letter card in the right panel */
 function SavedCard({ letter, onView, onDelete, deleting }) {
+  const handleView = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    onView(letter)
+  }
+  
+  const handleDelete = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    onDelete(letter.id)
+  }
+  
   return (
     <div className="contact-card flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
@@ -162,13 +258,15 @@ function SavedCard({ letter, onView, onDelete, deleting }) {
       </div>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => onView(letter)}
+          type="button"
+          onClick={handleView}
           className="btn-outline-em !px-3 !py-1.5 !text-xs flex-1"
         >
           <RiEyeLine size={13} /> View
         </button>
         <button
-          onClick={() => onDelete(letter.id)}
+          type="button"
+          onClick={handleDelete}
           disabled={deleting}
           className="btn-outline-red !px-3 !py-1.5 !text-xs"
         >
@@ -194,20 +292,36 @@ function DetailModal({ letter, onClose }) {
 
   const variants = detail?.variants || (detail?.body ? [{ tone: 'professional', body: detail.body }] : [])
 
+  const handleClose = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    onClose()
+  }
+  
+  const handleOverlayClick = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+  
+  const stopPropagation = (e) => {
+    if (e?.stopPropagation) e.stopPropagation()
+  }
+
   return (
-    <div className="modal-overlay animate-fade-in" onClick={onClose}>
+    <div className="modal-overlay animate-fade-in" onClick={handleOverlayClick}>
       <div
         className="modal-card p-6 flex flex-col gap-5"
-        onClick={e => e.stopPropagation()}
+        onClick={stopPropagation}
       >
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-t1 font-bold text-lg">{detail?.job_title || letter.job_title || 'Cover Letter'}</h2>
             <p className="text-t3 text-sm">{detail?.company || letter.company}</p>
           </div>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={handleClose}
             className="w-8 h-8 rounded-lg bg-surface2 border border-border flex items-center justify-center text-t3 hover:text-t1 transition-all"
           >
             <RiCloseLine size={16} />
@@ -223,7 +337,12 @@ function DetailModal({ letter, onClose }) {
         )}
         {error && <p className="text-red text-sm">{error}</p>}
         {!loading && !error && variants.map((v, i) => (
-          <VariantCard key={i} variant={v} letterId={detail?.id} />
+          // ✅ FIXED: Extract letterId from detail
+          <VariantCard 
+            key={i} 
+            variant={v} 
+            letterId={detail?.id || detail?.letter_id || detail?._id} 
+          />
         ))}
       </div>
     </div>
@@ -237,7 +356,6 @@ export default function CoverLetter() {
   const { resumeData, hasResume } = useResume()
   const resumeId = extractResumeId(resumeData)
 
-  // Form
   const [form, setForm] = useState({
     resume_id: resumeId ? Number(resumeId) : '',
     job_title: '',
@@ -248,7 +366,6 @@ export default function CoverLetter() {
     tone: 'professional',
   })
 
-  // Generation state
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
   const result = useStore((s) => s.coverResult)
@@ -256,22 +373,18 @@ export default function CoverLetter() {
   const [elapsedSec, setElapsedSec] = useState(0)
   const timerRef = useRef(null)
 
-  // Saved letters
   const saved = useStore((s) => s.savedLetters)
   const setSaved = useStore((s) => s.setSavedLetters)
   const [savedLoading, setSavedLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
 
-  // Modal
   const viewLetter = useStore((s) => s.viewLetter)
   const setViewLetter = useStore((s) => s.setViewLetter)
 
-  // Update resume_id whenever context loads
   useEffect(() => {
     if (resumeId) setForm(f => ({ ...f, resume_id: Number(resumeId) }))
   }, [resumeId])
 
-  // Elapsed timer
   useEffect(() => {
     if (generating) {
       setElapsedSec(0)
@@ -289,7 +402,6 @@ export default function CoverLetter() {
     return m > 0 ? `${m}m ${sec}s` : `${sec}s`
   }
 
-  // Fetch saved letters
   const fetchSaved = () => {
     setSavedLoading(true)
     coverLetterApi.list()
@@ -303,7 +415,10 @@ export default function CoverLetter() {
   const handleChange = (field, value) =>
     setForm(f => ({ ...f, [field]: value }))
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    
     if (!form.job_title.trim() || !form.company.trim()) {
       setGenError('Job title and company are required.')
       return
@@ -322,9 +437,13 @@ export default function CoverLetter() {
         tone: form.tone,
       }
       const res = await coverLetterApi.generate(payload)
+      console.log('✅ [Generate] Response:', res)  // ✅ Debug log
+      console.log('   res.id:', res.id)
+      console.log('   res.letter_id:', res.letter_id)
       setResult(res)
-      fetchSaved()   // refresh saved list after generation
+      fetchSaved()
     } catch (err) {
+      console.error('❌ [Generate] Error:', err)
       setGenError(errMessage(err, 'Generation failed. Please try again.'))
     } finally {
       setGenerating(false)
@@ -335,12 +454,22 @@ export default function CoverLetter() {
     setDeletingId(id)
     try {
       await coverLetterApi.remove(id)
-      setSaved(prev => prev.filter(l => l.id !== id))
+      setSaved(prev => Array.isArray(prev) ? prev.filter(l => l.id !== id) : [])
     } catch (err) {
       // silent — still remove optimistically on 200
     } finally {
       setDeletingId(null)
     }
+  }
+
+  const handleUploadClick = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    navigate('/resume')
+  }
+
+  const handleRefresh = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    fetchSaved()
   }
 
   const isFormValid = form.job_title.trim() && form.company.trim()
@@ -360,12 +489,10 @@ export default function CoverLetter() {
       </div>
 
       {/* ── Two-column layout ── */}
-      {/* ✅ FIX: h-[calc(100vh-...] makes columns same height, then we scroll only the right side */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 xl:items-start">
 
-        {/* ════ Left — Generator (scrolls naturally with page) ════ */}
+        {/* ════ Left — Generator ════ */}
         <div className="flex flex-col gap-6 min-w-0">
-          {/* No-resume banner */}
           {!hasResume && (
             <div className="flex items-center justify-between gap-4 flex-wrap bg-[#3D2400] border border-amber rounded-xl px-5 py-4">
               <div>
@@ -375,7 +502,8 @@ export default function CoverLetter() {
                 </p>
               </div>
               <button
-                onClick={() => navigate('/resume')}
+                type="button"
+                onClick={handleUploadClick}
                 className="bg-amber text-bg text-xs font-bold tracking-widest uppercase px-4 py-2 rounded-lg hover:brightness-110 transition-all flex-shrink-0"
               >
                 Upload
@@ -383,14 +511,12 @@ export default function CoverLetter() {
             </div>
           )}
 
-          {/* Form card */}
           <div className="card px-6 py-6 flex flex-col gap-5">
             <div className="flex items-center gap-2 mb-1">
               <RiSparklingLine size={16} className="text-em" />
               <span className="label-xs text-em">Generator</span>
             </div>
 
-            {/* Row 1: Job title + Company */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="label-xs">Job Title *</label>
@@ -412,7 +538,6 @@ export default function CoverLetter() {
               </div>
             </div>
 
-            {/* Row 2: Job URL + Location */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="label-xs">Job URL</label>
@@ -434,7 +559,6 @@ export default function CoverLetter() {
               </div>
             </div>
 
-            {/* Resume ID */}
             <div className="flex flex-col gap-1.5">
               <label className="label-xs flex items-center gap-2">
                 Resume ID
@@ -453,7 +577,6 @@ export default function CoverLetter() {
               />
             </div>
 
-            {/* Job description */}
             <div className="flex flex-col gap-1.5">
               <label className="label-xs">Job Description</label>
               <textarea
@@ -465,13 +588,13 @@ export default function CoverLetter() {
               />
             </div>
 
-            {/* Tone selector */}
             <div className="flex flex-col gap-2">
               <span className="label-xs">Primary Tone</span>
               <div className="flex flex-wrap gap-2">
                 {TONES.map(t => (
                   <button
                     key={t.value}
+                    type="button"
                     onClick={() => handleChange('tone', t.value)}
                     className={`
                       flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold transition-all
@@ -487,15 +610,14 @@ export default function CoverLetter() {
               </div>
             </div>
 
-            {/* Error */}
             {genError && (
               <div className="bg-[#2D0A0A] border border-[#3D1212] text-red text-sm rounded-lg px-4 py-3">
                 {genError}
               </div>
             )}
 
-            {/* Generate button */}
             <button
+              type="button"
               onClick={handleGenerate}
               disabled={generating || !isFormValid}
               className="btn-gradient"
@@ -505,7 +627,6 @@ export default function CoverLetter() {
                 : <><RiSparklingLine size={16} /> Generate 3 Variants</>}
             </button>
 
-            {/* Elapsed timer during generation */}
             {generating && (
               <div className="flex flex-col items-center gap-2 py-4 text-center">
                 <div className="bg-surface2 border border-border rounded-lg px-5 py-2 inline-flex items-center gap-3">
@@ -522,7 +643,6 @@ export default function CoverLetter() {
           {/* ── Results ── */}
           {result && (
             <div className="flex flex-col gap-5 animate-in">
-              {/* Success banner */}
               <div className="flex items-center gap-3 bg-[#052E1C] border border-em rounded-xl px-5 py-3.5">
                 <RiCheckLine size={18} className="text-em flex-shrink-0" />
                 <div>
@@ -533,21 +653,23 @@ export default function CoverLetter() {
                 </div>
               </div>
 
-              {/* Variant cards */}
-              {(result.variants || []).map((v, i) => (
-                <VariantCard
-                  key={i}
-                  variant={v}
-                  letterId={result.id}
-                  onSaved={fetchSaved}
-                />
-              ))}
+              {/* ✅ FIXED: Extract letter ID from multiple possible fields */}
+              {(result.variants || []).map((v, i) => {
+                const letterId = result.id || result.letter_id || result.cover_letter_id || result._id
+                return (
+                  <VariantCard
+                    key={i}
+                    variant={v}
+                    letterId={letterId}
+                    onSaved={fetchSaved}
+                  />
+                )
+              })}
             </div>
           )}
         </div>
 
-        {/* ════ Right — Saved letters (✅ INDEPENDENT SCROLL) ════ */}
-        {/* ✅ Sticky + max-height + overflow-y-auto = right column scrolls, page doesn't */}
+        {/* ════ Right — Saved letters ════ */}
         <div className="xl:sticky xl:top-6 xl:self-start">
           <div className="flex flex-col gap-4 max-h-[calc(100vh-7rem)] overflow-y-auto pr-1 saved-letters-scroll">
             <div className="flex items-center justify-between">
@@ -556,7 +678,8 @@ export default function CoverLetter() {
                 <span className="label-xs">Saved Letters</span>
               </div>
               <button
-                onClick={fetchSaved}
+                type="button"
+                onClick={handleRefresh}
                 disabled={savedLoading}
                 className="text-t4 hover:text-t2 transition-colors"
                 title="Refresh"
@@ -596,7 +719,6 @@ export default function CoverLetter() {
         </div>
       </div>
 
-      {/* ── Detail modal ── */}
       {viewLetter && (
         <DetailModal
           letter={viewLetter}
