@@ -1,0 +1,12 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="60" cy="60" r="58" fill="#022c22"/>
+  <circle cx="60" cy="60" r="34" fill="none" stroke="#6ee7b7" stroke-width="6"/>
+  <circle cx="60" cy="60" r="20" fill="none" stroke="#6ee7b7" stroke-width="6"/>
+  <circle cx="60" cy="60" r="6" fill="#6ee7b7"/>
+  <defs>
+    <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#a7f3d0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <line x1="30" y1="90" x2="88" y2="32" stroke="#a7f3d0" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+</svg>
