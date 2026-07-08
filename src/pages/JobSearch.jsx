@@ -4,10 +4,10 @@ import {
   RiSearch2Line, RiFlashlightLine, RiAlertLine,
   RiArrowDownSLine, RiLoader4Line, RiUserStarLine, RiMapPin2Line,
   RiTimeLine, RiCheckLine,
-  RiInfinityLine,        // Any time (∞ = unlimited)
-  RiFlashlightFill,      // 24h (lightning = instant/fast)
-  RiCalendarLine,        // 7d (calendar week)
-  RiCalendarEventLine,   // 30d (calendar month)
+  RiInfinityLine,
+  RiFlashlightFill,
+  RiCalendarLine,
+  RiCalendarEventLine,
 } from 'react-icons/ri'
 import { useAuth } from './context/AuthContext'
 import { useResume } from './context/ResumeContext'
@@ -23,7 +23,6 @@ const SORT_OPTIONS = [
   { value: 'title',       label: 'Job Title' },
 ]
 
-// ✅ Icons are React component refs, not emoji strings
 const TIME_FILTER_OPTIONS = [
   { value: 'any',  label: 'Any time',      Icon: RiInfinityLine },
   { value: '24h',  label: 'Last 24 hours', Icon: RiFlashlightFill },
@@ -31,9 +30,6 @@ const TIME_FILTER_OPTIONS = [
   { value: '30d',  label: 'Last 30 days',  Icon: RiCalendarEventLine },
 ]
 
-// Best-effort extraction of a resume id from whatever shape the upload
-// endpoint actually returns — the documented schema is just `"string"`,
-// so we defensively check a few common field names rather than assume.
 function extractResumeId(resumeData) {
   if (!resumeData) return null
   return resumeData.resume_id ?? resumeData.id ?? null
@@ -46,13 +42,12 @@ function CustomDropdown({
   options,
   disabled,
   ariaLabel,
-  accent = 'em', // 'em' | 'cyan'
+  accent = 'em',
   minWidth = '150px',
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
@@ -63,7 +58,6 @@ function CustomDropdown({
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') setOpen(false)
@@ -71,6 +65,19 @@ function CustomDropdown({
     if (open) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [open])
+
+  const toggleOpen = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    if (!disabled) setOpen(o => !o)
+  }
+
+  const selectOption = (optValue, e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    onChange(optValue)
+    setOpen(false)
+  }
 
   const selected = options.find(o => o.value === value) || options[0]
   const accentClasses = accent === 'cyan'
@@ -81,10 +88,9 @@ function CustomDropdown({
 
   return (
     <div ref={ref} className="relative w-full sm:w-auto" style={{ minWidth }}>
-      {/* Trigger button */}
       <button
         type="button"
-        onClick={() => !disabled && setOpen(o => !o)}
+        onClick={toggleOpen}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -99,7 +105,6 @@ function CustomDropdown({
         `}
       >
         <span className="flex items-center gap-2 truncate">
-          {/* ✅ Render the icon as a React component */}
           {selected.Icon && (
             <selected.Icon size={16} className={`flex-shrink-0 ${accentTextClass}`} />
           )}
@@ -111,7 +116,6 @@ function CustomDropdown({
         />
       </button>
 
-      {/* Dropdown panel */}
       {open && (
         <div
           className="
@@ -134,10 +138,7 @@ function CustomDropdown({
                 type="button"
                 role="option"
                 aria-selected={isSelected}
-                onClick={() => {
-                  onChange(opt.value)
-                  setOpen(false)
-                }}
+                onClick={(e) => selectOption(opt.value, e)}
                 className={`
                   w-full flex items-center justify-between gap-2
                   px-3.5 py-2.5 text-sm text-left
@@ -149,7 +150,6 @@ function CustomDropdown({
                 `}
               >
                 <span className="flex items-center gap-2 truncate">
-                  {/* ✅ Render the icon in the option */}
                   {Icon && (
                     <Icon size={16} className={`flex-shrink-0 ${isSelected ? accentTextClass : 'text-t3'}`} />
                   )}
@@ -170,7 +170,7 @@ function CustomDropdown({
   )
 }
 
-// ── Custom sort dropdown (matches your existing design) ───────
+// ── Custom sort dropdown ───────────────────────────────────────
 function SortDropdown({ value, onChange, options }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -189,13 +189,26 @@ function SortDropdown({ value, onChange, options }) {
     return () => document.removeEventListener('keydown', handler)
   }, [open])
 
+  const toggleOpen = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    setOpen(o => !o)
+  }
+
+  const selectOption = (optValue, e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    onChange(optValue)
+    setOpen(false)
+  }
+
   const selected = options.find(o => o.value === value) || options[0]
 
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={toggleOpen}
         aria-haspopup="listbox"
         aria-expanded={open}
         className="flex items-center gap-2 text-sm"
@@ -225,7 +238,7 @@ function SortDropdown({ value, onChange, options }) {
                 type="button"
                 role="option"
                 aria-selected={isSelected}
-                onClick={() => { onChange(opt.value); setOpen(false) }}
+                onClick={(e) => selectOption(opt.value, e)}
                 className={`
                   w-full text-left px-3.5 py-2 text-sm transition-colors
                   flex items-center justify-between
@@ -254,8 +267,11 @@ export default function JobSearch() {
   const setLocation = useStore((s) => s.setSearchLocation)
   const timeFilter = useStore((s) => s.timeFilter)
   const setTimeFilter = useStore((s) => s.setTimeFilter)
-  const jobs = useStore((s) => s.jobResults)
+  
+  // ✅ Default to empty array instead of undefined
+  const jobs = useStore((s) => s.jobResults) ?? []
   const setJobs = useStore((s) => s.setJobResults)
+  
   const searchMode = useStore((s) => s.searchMode)
   const setSearchMode = useStore((s) => s.setSearchMode)
   const sortBy = useStore((s) => s.sortBy)
@@ -271,7 +287,6 @@ export default function JobSearch() {
   const [letterIdx, setLetterIdx]     = useState(null)
   const [trackedMsg, setTrackedMsg]   = useState('')
   const [letterMsg, setLetterMsg]     = useState('')
-
 
   const [elapsedSec, setElapsedSec] = useState(0)
   const timerRef = useRef(null)
@@ -293,7 +308,11 @@ export default function JobSearch() {
     return m > 0 ? `${m}m ${s}s` : `${s}s`
   }
 
-  const runGeneralSearch = async () => {
+  // ✅ FIXED: All handlers accept event parameter properly
+  const runGeneralSearch = async (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    
     if (!location.trim()) {
       setSearchError('Enter a location to search.')
       return
@@ -313,7 +332,10 @@ export default function JobSearch() {
     }
   }
 
-  const runResumeSearch = async () => {
+  const runResumeSearch = async (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    
     if (!location.trim()) {
       setSearchError('Enter a location to search.')
       return
@@ -344,7 +366,11 @@ export default function JobSearch() {
     }
   }
 
-  const handleTrack = async (job, idx) => {
+  // ✅ FIXED: Accept event parameter
+  const handleTrack = async (job, idx, e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    
     setTrackingIdx(idx)
     try {
       await jobsApi.trackApplication({
@@ -363,9 +389,16 @@ export default function JobSearch() {
     }
   }
 
-  const handleGenerateCoverLetter = async (job, idx) => {
+  // ✅ FIXED: Accept event parameter, replace "event" with "e"
+  const handleGenerateCoverLetter = async (job, idx, e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    
+    console.log('🔍 [Cover Letter] Generating for job:', job.title, 'at', job.company, 'idx:', idx)
+    
     setLetterIdx(idx)
     setSearchError('')
+    
     try {
       const res = await coverLetterApi.generate({
         resume_id: resumeId ? Number(resumeId) : undefined,
@@ -376,25 +409,63 @@ export default function JobSearch() {
         location: job.location || '',
         tone: 'professional',
       })
+      
+      console.log('✅ [Cover Letter] Generated:', res)
+      
       const professionalVariant = res?.variants?.find(v => v.tone === 'professional') || res?.variants?.[0]
+      
       if (professionalVariant?.body) {
-        setJobs(prev => prev.map((j, i) => i === idx ? { ...j, cover_letter: professionalVariant.body, cover_letter_id: res.id } : j))
+        // ✅ Update ONLY this job — no full re-render
+        setJobs(prev => {
+          const safePrev = Array.isArray(prev) ? prev : []
+          console.log('🔍 [Cover Letter] Updating job at idx:', idx, 'total jobs:', safePrev.length)
+          
+          return safePrev.map((j, i) => 
+            i === idx 
+              ? { 
+                  ...j, 
+                  cover_letter: professionalVariant.body, 
+                  cover_letter_id: res.id || res.letter_id || res._id,
+                  cover_letter_tone: professionalVariant.tone 
+                } 
+              : j
+          )
+        })
+      } else {
+        console.warn('⚠️ [Cover Letter] No variants in response')
       }
+      
       setLetterMsg(`Generated for ${job.company} — view all 3 variants in Cover Letters`)
       setTimeout(() => setLetterMsg(''), 5000)
     } catch (err) {
+      console.error('❌ [Cover Letter] Error:', err)
+      console.error('   Status:', err.response?.status)
+      console.error('   Data:', err.response?.data)
       setSearchError(errMessage(err, 'Could not generate cover letter.'))
     } finally {
       setLetterIdx(null)
     }
   }
 
-  const handleInterviewPrep = (job) => {
+  const handleInterviewPrep = (job, e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
     navigate('/interview', { state: { jobTitle: job.title, company: job.company } })
   }
 
+  const handleUploadClick = (e) => {
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    navigate('/resume')
+  }
+
+  const handleCoverLettersToggle = (e) => {
+    if (e?.stopPropagation) e.stopPropagation()
+    setWantCoverLetters(e.target.checked)
+  }
+
   const visibleJobs = useMemo(() => {
-    if (!jobs) return []
+    if (!jobs || !Array.isArray(jobs)) return []
     return [...jobs].sort((a, b) => {
       if (sortBy === 'final_score') {
         const sa = a.final_score ?? a.ai_score ?? a.match_score ?? a.semantic_score ?? 0
@@ -417,6 +488,7 @@ export default function JobSearch() {
 
         <div className="flex items-center gap-3 self-end sm:self-auto">
           <button
+            type="button"
             onClick={runGeneralSearch}
             disabled={searching}
             className="flex items-center gap-2 bg-em text-bg font-semibold text-sm rounded-lg px-4 py-2.5 hover:brightness-110 transition-all disabled:opacity-60"
@@ -450,7 +522,8 @@ export default function JobSearch() {
             </div>
           </div>
           <button
-            onClick={() => navigate('/resume')}
+            type="button"
+            onClick={handleUploadClick}
             className="bg-amber text-bg text-xs font-bold tracking-widest uppercase px-4 py-2 rounded-lg hover:brightness-110 transition-all self-start sm:self-auto"
           >
             Upload Now
@@ -474,7 +547,12 @@ export default function JobSearch() {
         <div className="bg-[#052E1C] border border-em text-em text-sm rounded-xl px-4 sm:px-5 py-3 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <span>[letter] {letterMsg}</span>
           <button
-            onClick={() => navigate('/cover-letter')}
+            type="button"
+            onClick={(e) => {
+              if (e?.preventDefault) e.preventDefault()
+              if (e?.stopPropagation) e.stopPropagation()
+              navigate('/cover-letter')
+            }}
             className="text-em font-bold text-xs border border-em rounded-lg px-3 py-1.5 hover:bg-em hover:text-bg transition-all self-start sm:self-auto"
           >
             View all variants →
@@ -482,9 +560,9 @@ export default function JobSearch() {
         </div>
       )}
 
-      {/* Results column — full width */}
+      {/* Results column */}
       <div className="flex flex-col gap-5 min-w-0">
-        {/* Mode 1 — General location search */}
+        {/* Mode 1 — General search */}
         <div className="card px-4 sm:px-5 py-4">
           <div className="flex items-start sm:items-center gap-1.5 mb-2.5">
             <RiMapPin2Line size={13} className="text-cyan flex-shrink-0 mt-0.5 sm:mt-0" />
@@ -492,17 +570,20 @@ export default function JobSearch() {
             <span className="text-t4 text-[11px]">— searches all open roles in a location</span>
           </div>
 
-          {/* ✅ Responsive: stacks on mobile, side-by-side on desktop */}
           <div className="flex flex-col sm:flex-row gap-2.5">
             <input
               value={location}
               onChange={e => setLocation(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && runGeneralSearch()}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  runGeneralSearch(e)
+                }
+              }}
               placeholder="City, country, or 'Remote'…"
               className="input-base py-3 w-full sm:flex-1 min-w-0"
             />
 
-            {/* ✅ Custom time filter dropdown (uses React icons) */}
             <CustomDropdown
               value={timeFilter}
               onChange={setTimeFilter}
@@ -512,6 +593,7 @@ export default function JobSearch() {
             />
 
             <button
+              type="button"
               onClick={runGeneralSearch}
               disabled={searching}
               className="btn-outline !w-full sm:!w-auto px-5 whitespace-nowrap text-cyan border-[#0E3347] hover:border-cyan justify-center inline-flex items-center"
@@ -524,7 +606,7 @@ export default function JobSearch() {
           </div>
         </div>
 
-        {/* Mode 2 — Resume-matched search */}
+        {/* Mode 2 — Resume search */}
         <div className="card px-4 sm:px-5 py-4">
           <div className="flex items-start sm:items-center gap-1.5 mb-2.5">
             <RiUserStarLine size={13} className="text-em flex-shrink-0 mt-0.5 sm:mt-0" />
@@ -532,18 +614,21 @@ export default function JobSearch() {
             <span className="text-t4 text-[11px]">— extracts skills from your CV and scores results against them</span>
           </div>
 
-          {/* ✅ Responsive: stacks on mobile, side-by-side on desktop */}
           <div className="flex flex-col sm:flex-row gap-2.5">
             <input
               value={location}
               onChange={e => setLocation(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && runResumeSearch()}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  runResumeSearch(e)
+                }
+              }}
               placeholder="City, country, or 'Remote'…"
               className="input-base py-3 w-full sm:flex-1 min-w-0"
               disabled={!hasResume}
             />
 
-            {/* ✅ Custom time filter dropdown (uses React icons) */}
             <CustomDropdown
               value={timeFilter}
               onChange={setTimeFilter}
@@ -554,6 +639,7 @@ export default function JobSearch() {
             />
 
             <button
+              type="button"
               onClick={runResumeSearch}
               disabled={searching || !hasResume}
               className="btn-primary !w-full sm:!w-auto px-5 whitespace-nowrap disabled:opacity-50 justify-center inline-flex items-center"
@@ -574,7 +660,7 @@ export default function JobSearch() {
           <input
             type="checkbox"
             checked={wantCoverLetters}
-            onChange={e => setWantCoverLetters(e.target.checked)}
+            onChange={handleCoverLettersToggle}
             className="sr-only peer"
           />
           <span className="
@@ -592,19 +678,18 @@ export default function JobSearch() {
         </label>
 
         {/* Results count + sort */}
-        {jobs !== null && (
+        {jobs !== null && jobs.length > 0 && (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <span className="text-t3 text-sm leading-relaxed">
               Found <span className="text-t1 font-bold">{visibleJobs.length}</span> relevant opportunities
               {searchMode && (
-                <span className="text-t4"> &middot; via {searchMode === 'resume' ? 'resume match' : 'general search'}</span>
+                <span className="text-t4"> · via {searchMode === 'resume' ? 'resume match' : 'general search'}</span>
               )}
               {timeFilter !== 'any' && (
-                <span className="text-t4"> &middot; {timeFilterLabel}</span>
+                <span className="text-t4"> · {timeFilterLabel}</span>
               )}
             </span>
 
-            {/* ✅ Custom sort dropdown */}
             <div className="self-start sm:self-auto">
               <SortDropdown
                 value={sortBy}
@@ -647,7 +732,7 @@ export default function JobSearch() {
         )}
 
         {/* Empty state */}
-        {!searching && jobs === null && (
+        {!searching && (!jobs || jobs.length === 0) && (
           <div className="flex flex-col items-center justify-center py-16 sm:py-24 text-center gap-2 px-4">
             <RiSearch2Line size={32} className="text-t4 mb-2" />
             <p className="text-t2 text-sm font-medium">Run a general or resume-matched search above</p>
@@ -656,7 +741,7 @@ export default function JobSearch() {
         )}
 
         {/* No results */}
-        {!searching && jobs !== null && visibleJobs.length === 0 && (
+        {!searching && jobs && jobs.length > 0 && visibleJobs.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 sm:py-24 text-center gap-2 px-4">
             <p className="text-t2 text-sm font-medium">No jobs matched this search</p>
             <p className="text-t4 text-xs max-w-sm">
@@ -676,9 +761,10 @@ export default function JobSearch() {
                 job={job}
                 tracking={trackingIdx === idx}
                 generatingLetter={letterIdx === idx}
-                onTrack={(j) => handleTrack(j, idx)}
-                onGenerateCoverLetter={(j) => handleGenerateCoverLetter(j, idx)}
-                onInterviewPrep={handleInterviewPrep}
+                // ✅ FIXED: Pass event as third argument
+                onTrack={(j, e) => handleTrack(j, idx, e)}
+                onGenerateCoverLetter={(j, e) => handleGenerateCoverLetter(j, idx, e)}
+                onInterviewPrep={(j, e) => handleInterviewPrep(j, e)}
               />
             ))}
           </div>
