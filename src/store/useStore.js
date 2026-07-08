@@ -37,14 +37,20 @@ export const useStore = create((set, get) => ({
   setViewLetter: (letter) => set({ viewLetter: letter }),
 
   // ═══════════════════════════════════════════════════════════
-  // SEMANTIC SEARCH PAGE
+  // SEMANTIC SEARCH PAGE — ✅ FIXED: always an array
   // ═══════════════════════════════════════════════════════════
   semanticQuery: '',
   setSemanticQuery: (q) => set({ semanticQuery: q }),
   topK: 10,
   setTopK: (k) => set({ topK: k }),
-  semanticResults: null,
-  setSemanticResults: (results) => set({ semanticResults: results }),
+  // ✅ Changed from null to [] so .map() always works
+  semanticResults: [],
+  // ✅ Safe setter that guarantees an array
+  setSemanticResults: (results) => set({ 
+    semanticResults: Array.isArray(results) ? results : [] 
+  }),
+  // ✅ Helper to clear results
+  clearSemanticResults: () => set({ semanticResults: [] }),
 
   // ═══════════════════════════════════════════════════════════
   // RESUME PAGE (only extraSkills — rest is in ResumeContext)
@@ -83,14 +89,17 @@ export const useStore = create((set, get) => ({
   setLinkedinHeadlineResult: (r) => set({ linkedinHeadlineResult: r }),
 
   // ═══════════════════════════════════════════════════════════
-  // JOB SEARCH PAGE
+  // JOB SEARCH PAGE — ✅ ALSO FIXED
   // ═══════════════════════════════════════════════════════════
   searchLocation: '',
   setSearchLocation: (v) => set({ searchLocation: v }),
   timeFilter: 'any',
   setTimeFilter: (v) => set({ timeFilter: v }),
-  jobResults: null,
-  setJobResults: (j) => set({ jobResults: j }),
+  // ✅ Changed from null to []
+  jobResults: [],
+  setJobResults: (j) => set({ 
+    jobResults: Array.isArray(j) ? j : [] 
+  }),
   searchMode: null,
   setSearchMode: (m) => set({ searchMode: m }),
   sortBy: 'final_score',
@@ -155,7 +164,7 @@ export const useStore = create((set, get) => ({
 
     semanticQuery: '',
     topK: 10,
-    semanticResults: null,
+    semanticResults: [],   // ✅ Reset to []
 
     extraSkills: [],
 
@@ -174,7 +183,7 @@ export const useStore = create((set, get) => ({
 
     searchLocation: '',
     timeFilter: 'any',
-    jobResults: null,
+    jobResults: [],        // ✅ Reset to []
     searchMode: null,
     sortBy: 'final_score',
     wantCoverLetters: false,
