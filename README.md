@@ -9,7 +9,7 @@ A modern, responsive, and AI-powered Job Portal frontend built with **React**. T
 ![Axios](https://img.shields.io/badge/Axios-API-5A29E4?style=for-the-badge)
 
 ---
-# Live Preview ![live](https://ai-driven-recruitment-frontend.vercel.app/)
+# Live Preview [live](https://ai-driven-recruitment-frontend.vercel.app/)
 # ✨ Features
 
 ## 🔐 Authentication
