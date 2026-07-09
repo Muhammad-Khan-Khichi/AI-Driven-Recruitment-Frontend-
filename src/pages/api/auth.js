@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE = 'http://localhost:8000/api'
+const BASE = import.meta.env.VITE_API_BASE_URL 
 
 const getToken = () => localStorage.getItem('hire_ai_token')
 const authHeaders = () => ({ Authorization: `Bearer ${getToken()}` })

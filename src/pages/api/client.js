@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE = 'http://localhost:8000/api'
+const BASE = import.meta.env.VITE_API_BASE_URL 
 
 // Default client — fine for fast CRUD-style endpoints
 export const client = axios.create({ baseURL: BASE, timeout: 90000 })
