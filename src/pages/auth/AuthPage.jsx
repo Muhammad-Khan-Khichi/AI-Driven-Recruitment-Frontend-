@@ -187,8 +187,8 @@ function SignInForm({ globalError, onForgot }) {
       <OrDivider />
 
       <div className="flex gap-3">
-        <OAuthBtn icon={RiGoogleLine}   label="Google"   href={`${API_BASE}/auth/google/login`} />
-        <OAuthBtn icon={RiLinkedinLine} label="LinkedIn" href={`${API_BASE}/auth/linkedin/login`} />
+        <OAuthBtn icon={RiGoogleLine}   label="Google"   href={`${API_BASE}/api/auth/google/login`} />
+        <OAuthBtn icon={RiLinkedinLine} label="LinkedIn" href={`${API_BASE}/api/auth/linkedin/login`} />
       </div>
     </form>
   )
@@ -256,8 +256,8 @@ function SignUpForm({ globalError }) {
       <OrDivider />
 
       <div className="flex gap-3">
-        <OAuthBtn icon={RiGoogleLine}   label="Google"   href={`${API_BASE}/auth/google/login`} />
-        <OAuthBtn icon={RiLinkedinLine} label="LinkedIn" href={`${API_BASE}/auth/linkedin/login`} />
+        <OAuthBtn icon={RiGoogleLine}   label="Google"   href={`${API_BASE}/api/auth/google/login`} />
+        <OAuthBtn icon={RiLinkedinLine} label="LinkedIn" href={`${API_BASE}/api/auth/linkedin/login`} />
       </div>
     </form>
   )
