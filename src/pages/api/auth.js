@@ -11,7 +11,7 @@ export const authApi = {
     const params = new URLSearchParams()
     params.append('username', username)
     params.append('password', password)
-    const { data } = await axios.post(`${BASE}/auth/login`, params, {
+    const { data } = await axios.post(`${BASE}/api/auth/login`, params, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
     return data
@@ -19,18 +19,18 @@ export const authApi = {
 
   // JSON body
   signup: async ({ email, username, password, full_name, location }) => {
-    const { data } = await axios.post(`${BASE}/auth/signup`, {
+    const { data } = await axios.post(`${BASE}/api/auth/signup`, {
       email, username, password, full_name, location,
     })
     return data
   },
 
   me: async () => {
-    const { data } = await axios.get(`${BASE}/auth/me`, { headers: authHeaders() })
+    const { data } = await axios.get(`${BASE}/api/auth/me`, { headers: authHeaders() })
     return data
   },
 
   logout: async () => {
-    await axios.post(`${BASE}/auth/logout`, {}, { headers: authHeaders() })
+    await axios.post(`${BASE}/api/auth/logout`, {}, { headers: authHeaders() })
   },
 }
