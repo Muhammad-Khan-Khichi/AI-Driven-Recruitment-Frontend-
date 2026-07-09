@@ -37,7 +37,7 @@ function useApiHealth() {
     let mounted = true
     const check = async () => {
       try {
-        const res = await fetch('http://localhost:8000/health', { signal: AbortSignal.timeout(2500) })
+        const res = await fetch('https://muhammadkhankhihci-hireai.hf.space/health', { signal: AbortSignal.timeout(2500) })
         if (mounted) setOnline(res.ok)
       } catch {
         if (mounted) setOnline(false)
