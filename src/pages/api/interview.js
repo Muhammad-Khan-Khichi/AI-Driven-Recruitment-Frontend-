@@ -13,7 +13,7 @@ export const interviewApi = {
   // Response: { questions: [{ question, type, tip, tags[] }] }
   //           (may be returned as JSON string or object)
   generateQuestions: (payload) =>
-    longRunningClient.post('/interview/questions', payload),
+    longRunningClient.post('/api/interview/questions', payload),
 
   // Evaluate a typed answer against a question
   // Request schema:
@@ -25,7 +25,7 @@ export const interviewApi = {
   //
   // Response: { score: 0-10, verdict, feedback, strengths[], improvements[], improved_answer }
   evaluateAnswer: (payload) =>
-    longRunningClient.post('/interview/evaluate', payload),
+    longRunningClient.post('/api/interview/evaluate', payload),
 
   //    Generate a personalized study plan                     ─
   // Request schema:
@@ -38,5 +38,5 @@ export const interviewApi = {
   // Response: { plan: [{ week/day, theme, topics[] }], resources[] }
   //           (may be returned as JSON string or object)
   studyPlan: (payload) =>
-    longRunningClient.post('/interview/study-plan', payload),
+    longRunningClient.post('/api/interview/study-plan', payload),
 }
