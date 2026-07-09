@@ -5,7 +5,7 @@ export const jobsApi = {
     const form = new FormData()
     form.append('file', file)
     // Resume parsing can also take a while (extraction + profile generation)
-    return longRunningClient.post('/jobs/upload-resume', form, {
+    return longRunningClient.post('/api/jobs/upload-resume', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
@@ -15,7 +15,7 @@ export const jobsApi = {
   // This regularly takes 1-5+ minutes depending on how many keyword combinations run.
   //  accepts timeFilter ("24h" | "7d" | "30d" | "any")
   search: (location, generateCoverLetters = false, timeFilter = 'any') =>
-    longRunningClient.post('/jobs/search', {
+    longRunningClient.post('/api/jobs/search', {
       location,
       generate_cover_letters: generateCoverLetters,
       time_filter: timeFilter, 
@@ -33,7 +33,7 @@ export const jobsApi = {
     minMatchScore = 20,
     generateCoverLetters = false,
     timeFilter = 'any',  
-  }) => longRunningClient.post('/jobs/search-by-resume', {
+  }) => longRunningClient.post('/api/jobs/search-by-resume', {
     resume_id: resumeId,
     location,
     max_results_per_keyword: maxResultsPerKeyword,
@@ -42,14 +42,14 @@ export const jobsApi = {
     time_filter: timeFilter, 
   }),
 
-  history: () => client.get('/jobs/history'),
+  history: () => client.get('/api/jobs/history'),
 
-  trackApplication: (payload) => client.post('/jobs/applications', payload),
+  trackApplication: (payload) => client.post('/api/jobs/applications', payload),
 
-  listApplications: (status) => client.get('/jobs/applications', { params: status ? { status } : {} }),
+  listApplications: (status) => client.get('/api/jobs/applications', { params: status ? { status } : {} }),
 
   updateApplication: (appId, { status, notes } = {}) =>
-    client.patch(`/jobs/applications/${appId}`, null, { params: { status, notes } }),
+    client.patch(`/api/jobs/applications/${appId}`, null, { params: { status, notes } }),
 
   // Real server-side filter contract — richer than location-only matching
   filterJobs: ({
@@ -62,7 +62,7 @@ export const jobsApi = {
     companyBlacklist,
     keywordsRequired,
     keywordsExcluded,
-  }) => client.post('/jobs/filter', {
+  }) => client.post('/api/jobs/filter', {
     jobs,
     remote_only: remoteOnly,
     min_salary: minSalary,
@@ -74,5 +74,5 @@ export const jobsApi = {
     keywords_excluded: keywordsExcluded,
   }),
 
-  generateCoverLetter: (payload) => longRunningClient.post('/jobs/cover-letter', payload),
+  generateCoverLetter: (payload) => longRunningClient.post('/api/jobs/cover-letter', payload),
 }

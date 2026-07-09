@@ -7,7 +7,7 @@ export const linkedinApi = {
   // Response schema is "string" — could be plain text, markdown, or JSON-in-string.
   // We parse defensively in the page component.
   optimizeProfile: ({ currentHeadline, currentAbout, currentSkills, targetRole, yearsExperience, industry }) =>
-    longRunningClient.post('/linkedin/optimize-profile', {
+    longRunningClient.post('/api/linkedin/optimize-profile', {
       current_headline:  currentHeadline || undefined,
       current_about:     currentAbout    || undefined,
       current_skills:    Array.isArray(currentSkills) ? currentSkills : [],
@@ -20,7 +20,7 @@ export const linkedinApi = {
   // Exact request schema from docs: { current_headline, target_role }
   // Response schema is "string"
   optimizeHeadline: ({ currentHeadline, targetRole }) =>
-    longRunningClient.post('/linkedin/optimize-headline', {
+    longRunningClient.post('/api/linkedin/optimize-headline', {
       current_headline: currentHeadline || undefined,
       target_role:      targetRole      || undefined,
     }),
