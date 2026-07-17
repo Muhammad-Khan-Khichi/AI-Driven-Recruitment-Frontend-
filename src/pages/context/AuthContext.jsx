@@ -6,29 +6,25 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
-  const [token, setToken]     = useState(() => localStorage.getItem('hire_ai_token'))
   const [loading, setLoading] = useState(true)
 
-  // On mount  if token exists, fetch /auth/me
+  // On mount — ask the backend who we are. The httpOnly cookie (if any)
+  // is sent automatically; there's no token to read from localStorage anymore.
   useEffect(() => {
-    if (token) {
-      authApi.me()
-        .then(data => {
-          setUser(data)
-
-          localStorage.setItem('hire_ai_user', JSON.stringify(data))
-        })
-        .catch(() => { logout() })
-        .finally(() => setLoading(false))
-    } else {
-      setLoading(false)
-    }
+    authApi.me()
+      .then(data => {
+        setUser(data)
+        localStorage.setItem('hire_ai_user', JSON.stringify(data))
+      })
+      .catch(() => {
+        setUser(null)
+        localStorage.removeItem('hire_ai_user')
+      })
+      .finally(() => setLoading(false))
   }, [])
 
   const login = async (username, password) => {
-    const res = await authApi.login(username, password)
-    localStorage.setItem('hire_ai_token', res.access_token)
-    setToken(res.access_token)
+    await authApi.login(username, password)   // backend sets the cookie
     const me = await authApi.me()
     setUser(me)
     localStorage.setItem('hire_ai_user', JSON.stringify(me))
@@ -36,31 +32,23 @@ export function AuthProvider({ children }) {
   }
 
   const signup = async (payload) => {
-    const res = await authApi.signup(payload)
-    localStorage.setItem('hire_ai_token', res.access_token)
-    setToken(res.access_token)
+    await authApi.signup(payload)              // backend sets the cookie
     const me = await authApi.me()
     setUser(me)
     localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
   }
 
-  const logout = () => {
-    authApi.logout().catch(() => {})
-    localStorage.removeItem('hire_ai_token')
-    localStorage.removeItem('hire_ai_user')  
-    setToken(null)
+  const logout = async () => {
+    await authApi.logout().catch(() => {})      // backend clears the cookie
+    localStorage.removeItem('hire_ai_user')
     setUser(null)
     useStore.getState().resetAll()
   }
 
   const refreshProfile = async () => {
-    const currentToken = localStorage.getItem('hire_ai_token')
-    if (currentToken) setToken(currentToken)
-
     const me = await authApi.me()
     setUser(me)
-
     localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
   }
@@ -78,9 +66,9 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, token, loading,
+      user, loading,
       login, signup, logout,
-      refreshProfile, updateUser, 
+      refreshProfile, updateUser,
       isAdmin
     }}>
       {children}
