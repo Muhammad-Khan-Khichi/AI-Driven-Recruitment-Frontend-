@@ -9,17 +9,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   // On mount — ask the backend who we are. The httpOnly cookie (if any)
-  // is sent automatically; there's no token to read from localStorage anymore.
+  // is sent automatically; nothing about the user is cached in localStorage.
   useEffect(() => {
     authApi.me()
-      .then(data => {
-        setUser(data)
-        localStorage.setItem('hire_ai_user', JSON.stringify(data))
-      })
-      .catch(() => {
-        setUser(null)
-        localStorage.removeItem('hire_ai_user')
-      })
+      .then(data => setUser(data))
+      .catch(() => setUser(null))
       .finally(() => setLoading(false))
   }, [])
 
@@ -27,7 +21,6 @@ export function AuthProvider({ children }) {
     await authApi.login(username, password)   // backend sets the cookie
     const me = await authApi.me()
     setUser(me)
-    localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
   }
 
@@ -35,13 +28,11 @@ export function AuthProvider({ children }) {
     await authApi.signup(payload)              // backend sets the cookie
     const me = await authApi.me()
     setUser(me)
-    localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
   }
 
   const logout = async () => {
     await authApi.logout().catch(() => {})      // backend clears the cookie
-    localStorage.removeItem('hire_ai_user')
     setUser(null)
     useStore.getState().resetAll()
   }
@@ -49,17 +40,12 @@ export function AuthProvider({ children }) {
   const refreshProfile = async () => {
     const me = await authApi.me()
     setUser(me)
-    localStorage.setItem('hire_ai_user', JSON.stringify(me))
     return me
   }
 
-  // profile locally (used after PUT /api/profile/)
+  // profile locally (used after PUT /api/profile/) — kept in memory only
   const updateUser = (updates) => {
-    setUser(prev => {
-      const updated = { ...prev, ...updates }
-      localStorage.setItem('hire_ai_user', JSON.stringify(updated))
-      return updated
-    })
+    setUser(prev => ({ ...prev, ...updates }))
   }
 
   const isAdmin = () => Boolean(user?.is_admin)
