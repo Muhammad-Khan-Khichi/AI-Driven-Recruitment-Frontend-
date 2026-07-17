@@ -55,6 +55,9 @@ export function AuthProvider({ children }) {
   }
 
   const refreshProfile = async () => {
+    const currentToken = localStorage.getItem('hire_ai_token')
+    if (currentToken) setToken(currentToken)
+
     const me = await authApi.me()
     setUser(me)
 
