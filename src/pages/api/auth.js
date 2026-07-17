@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-const BASE = import.meta.env.VITE_API_BASE_URL 
+const BASE = import.meta.env.VITE_API_BASE_URL
 
-const getToken = () => localStorage.getItem('hire_ai_token')
-const authHeaders = () => ({ Authorization: `Bearer ${getToken()}` })
+// ✅ Send the httpOnly cookie on every request automatically
+axios.defaults.withCredentials = true
 
 export const authApi = {
   // OAuth2PasswordRequestForm — MUST be form-encoded
@@ -25,12 +25,14 @@ export const authApi = {
     return data
   },
 
+  // ✅ No headers needed — cookie is sent automatically
   me: async () => {
-    const { data } = await axios.get(`${BASE}/api/auth/me`, { headers: authHeaders() })
+    const { data } = await axios.get(`${BASE}/api/auth/me`)
     return data
   },
 
+  // ✅ No headers needed — cookie is sent automatically; backend clears the cookie
   logout: async () => {
-    await axios.post(`${BASE}/api/auth/logout`, {}, { headers: authHeaders() })
+    await axios.post(`${BASE}/api/auth/logout`)
   },
 }
