@@ -13,6 +13,7 @@ import logon from '../../../public/ico.png'
 const API_BASE = import.meta.env.VITE_API_BASE_URL 
 
 //OAuth callback handler
+
 function useOAuthCallback() {
   const location  = useLocation()
   const navigate  = useNavigate()
@@ -21,7 +22,6 @@ function useOAuthCallback() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
-    const token  = params.get('token') || params.get('access_token')
     const error  = params.get('error')
 
     if (error) {
@@ -35,14 +35,13 @@ function useOAuthCallback() {
       return
     }
 
-    if (token) {
-      localStorage.setItem('hire_ai_token', token)
+    // Only run this on the actual OAuth callback route — otherwise a normal
+    // visit to /auth would also try (and fail) to refresh a profile.
+    if (location.pathname.includes('/auth/callback')) {
       refreshProfile()
         .then(() => navigate('/', { replace: true }))
         .catch(() => {
           setOauthError('OAuth succeeded but could not load your profile. Please try again.')
-          localStorage.removeItem('hire_ai_token')
-          window.history.replaceState({}, '', window.location.pathname)
         })
     }
   }, [location.search])
