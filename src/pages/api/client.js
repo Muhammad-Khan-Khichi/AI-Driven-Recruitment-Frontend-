@@ -1,21 +1,23 @@
 import axios from 'axios'
 
-const BASE = import.meta.env.VITE_API_BASE_URL 
+const BASE = import.meta.env.VITE_API_BASE_URL
 
 // Default client — fine for fast CRUD-style endpoints
-export const client = axios.create({ baseURL: BASE, timeout: 90000 })
+export const client = axios.create({
+  baseURL: BASE,
+  timeout: 90000,
+  withCredentials: true,   // ✅ send the httpOnly auth cookie on every request
+})
 
 // Long-running client — for the job search agent endpoints, which run a real
 // multi-step pipeline (resume parsing, multiple job-board calls per keyword,
 // semantic search, then AI ranking via Mistral) and can legitimately take
 // several minutes when searching multiple keyword combinations sequentially.
-export const longRunningClient = axios.create({ baseURL: BASE, timeout: 600000 }) // 10 minutes
-
-function attachAuth(cfg) {
-  const token = localStorage.getItem('hire_ai_token')
-  if (token) cfg.headers.Authorization = `Bearer ${token}`
-  return cfg
-}
+export const longRunningClient = axios.create({
+  baseURL: BASE,
+  timeout: 600000, // 10 minutes
+  withCredentials: true,   // ✅ send the httpOnly auth cookie on every request
+})
 
 function handleResponse(res) {
   return res.data
@@ -23,7 +25,9 @@ function handleResponse(res) {
 
 function handleError(err) {
   if (err.response?.status === 401) {
-    localStorage.removeItem('hire_ai_token')
+    // Cookie is invalid/expired — redirect to login.
+    // (No localStorage token to clear anymore; the cookie is cleared by
+    // the backend's /logout endpoint or simply expires server-side.)
     window.location.href = '/auth'
   }
   if (err.code === 'ECONNABORTED') {
@@ -39,10 +43,7 @@ function handleError(err) {
   return Promise.reject(apiErr)
 }
 
-client.interceptors.request.use(attachAuth)
 client.interceptors.response.use(handleResponse, handleError)
-
-longRunningClient.interceptors.request.use(attachAuth)
 longRunningClient.interceptors.response.use(handleResponse, handleError)
 
 export default client
