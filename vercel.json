@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/hf/:path*",
+      "destination": "https://muhammadkhankhihci-hireai.hf.space/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
